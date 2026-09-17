@@ -489,24 +489,26 @@ el("befund-copy").addEventListener("click", () => {
     "",
     b.conclusion,
   ].join("\n");
-  // Rich-text target (Word, Mail, browsers): a real table so the years/
-  // months values line up strictly left-aligned under one another
-  // regardless of label length, set in Arial 9.5pt throughout. Word and
-  // most mail clients draw a visible grid on any pasted <table> unless
-  // told not to on both the table and every cell - the border="0"
-  // attribute is for old Word/Outlook builds that ignore the CSS.
+  // Rich-text target (Word, Mail, browsers): fixed-width inline-block spans
+  // line up the years/months values strictly left-aligned regardless of
+  // label length, in Arial 9.5pt. Deliberately not a <table>: several
+  // note/document apps (Apple Notes among them) ignore a pasted table's
+  // own styling entirely and re-render it as their own bordered, shaded
+  // "smart table" widget - exactly the visible grid this must not show.
+  // Plain <div>/<span> survive as styled text instead of being upgraded
+  // to a table object. 180px comfortably fits the longest label
+  // ("Biologisches Knochenalter:", ~153px in Arial 9.5pt) without wrapping.
   const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
-  const noBorder = "border:none; border-style:none; border-width:0;";
-  const cell = (text: string, padRight: string) =>
-    `<td style="text-align:left; white-space:nowrap; padding:0 ${padRight} 4px 0; ${noBorder} ${font}">${escapeHtml(text)}</td>`;
+  const labelWidth = "180px";
+  const row = (label: string, value: string) =>
+    `<div style="white-space:nowrap; margin:0 0 4px; ${font}">` +
+    `<span style="display:inline-block; width:${labelWidth}; vertical-align:top; white-space:nowrap;">${escapeHtml(label)}</span>` +
+    `<span>${escapeHtml(value)}</span>` +
+    `</div>`;
   const html =
     `<div style="${font}">` +
-    `<table border="0" style="border-collapse:collapse; ${noBorder} ${font}" cellpadding="0" cellspacing="0"><tbody>` +
-    rows
-      .map(([label, value]) => `<tr>${cell(label, "24px")}${cell(value, "0")}</tr>`)
-      .join("") +
-    `</tbody></table>` +
-    `<p style="margin:12px 0 0; ${font}">${escapeHtml(b.conclusion)}</p>` +
+    rows.map(([label, value]) => row(label, value)).join("") +
+    `<div style="margin:12px 0 0; ${font}">${escapeHtml(b.conclusion)}</div>` +
     `</div>`;
   void (async () => {
     try {
