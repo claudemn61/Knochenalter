@@ -325,14 +325,14 @@ const de = {
   "pdf.refLicense":
     "Gewichte weitergegeben unter der Apache License 2.0, mit Änderungshinweis: nach ONNX konvertiert, nicht neu trainiert.",
   "pdf.refApplication":
-    "Ursprüngliche Anwendung bone-age.app von @feliperun, Code unter MIT-Lizenz — github.com/feliperun/bone-age. Diese deutschsprachige Version: github.com/claudemn61/knochenalter",
+    "Ursprüngliche Anwendung bone-age.app von @feliperun, Code unter MIT-Lizenz — github.com/feliperun/bone-age. Diese deutschsprachige Version: github.com/claudemn61/Knochenalter",
   "pdf.disclaimerHeading": "Hinweis",
   "pdf.pageNumber": "{page}/{total}",
   "pdf.secondsValue": "{seconds} s",
   "pdf.cropValue": "{x0}, {y0}, {x1}, {y1}",
   "pdf.imageSizeValue": "{width} × {height} px",
-  "pdf.siteName": "claudemn61.github.io/knochenalter",
-  "pdf.siteUrl": "https://claudemn61.github.io/knochenalter/",
+  "pdf.siteName": "claudemn61.github.io/Knochenalter",
+  "pdf.siteUrl": "https://claudemn61.github.io/Knochenalter/",
   "pdf.promoEyebrow": "KOSTENLOS · KEINE REGISTRIERUNG · LOKALE VERARBEITUNG",
   "pdf.promoHeading": "Knochenalter aus einem weiteren Röntgenbild schätzen",
   "pdf.promoText":
