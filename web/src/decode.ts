@@ -3,11 +3,18 @@ import UTIF from "utif";
 import type { GrayImage } from "./types";
 import { t } from "./i18n";
 
-// Generous enough for a phone photo of a printed/screen-displayed X-ray at
-// full camera resolution (up to ~80 MP, comfortably above the 48-64 MP
-// modern phone cameras commonly produce) while still rejecting clearly
-// malformed dimensions.
+// Sanity ceiling only - rejects clearly malformed dimensions. Actual working
+// resolution is capped much lower (see MAX_WORKING_DIMENSION below); nothing
+// here needs to hold a full-resolution 48-108 MP phone photo in memory.
 const MAX_PIXELS = 80_000_000;
+// Long-edge cap for the decoded working copy (crop UI, review zoom, the
+// pixels kept in memory and sent to the model). Modern phone cameras
+// routinely produce 48-108 MP photos; decoding and grayscale-converting
+// that at full resolution risks running a phone browser tab out of memory
+// (silently - no catchable error, the page just stops responding). The
+// model itself resizes everything to 512x512 regardless, and 4000px on the
+// long edge is still ample detail for manually cropping the hand by eye.
+const MAX_WORKING_DIMENSION = 4000;
 function dimensions(width: number, height: number) {
   if (
     !Number.isInteger(width) ||
@@ -44,21 +51,26 @@ function fromRGBA(
 }
 async function decodeBitmap(
   blob: Blob,
+  allowDownscale = false,
 ): Promise<Pick<GrayImage, "pixels" | "width" | "height">> {
   const bitmap = await createImageBitmap(blob);
   try {
     dimensions(bitmap.width, bitmap.height);
-    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    // The DICOM-embedded-JPEG path (allowDownscale=false) must come back at
+    // exactly the DICOM's declared size, which the caller checks; only the
+    // plain-photo path may shrink a huge source down to a working copy.
+    const scale = allowDownscale
+      ? Math.min(1, MAX_WORKING_DIMENSION / Math.max(bitmap.width, bitmap.height))
+      : 1;
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(bitmap, 0, 0, width, height);
     return {
-      pixels: fromRGBA(
-        ctx.getImageData(0, 0, bitmap.width, bitmap.height).data,
-        bitmap.width,
-        bitmap.height,
-      ),
-      width: bitmap.width,
-      height: bitmap.height,
+      pixels: fromRGBA(ctx.getImageData(0, 0, width, height).data, width, height),
+      width,
+      height,
     };
   } finally {
     bitmap.close();
@@ -268,6 +280,35 @@ interface LibheifModule {
   HeifDecoder: new () => { decode(bytes: Uint8Array): HeifImage[] };
 }
 
+/** Shrinks an already-decoded RGBA buffer to MAX_WORKING_DIMENSION on the
+ * long edge, if it exceeds it; a no-op otherwise. Used for HEIC, whose
+ * decoder (unlike createImageBitmap) has no built-in resize option. */
+function downscaleIfNeeded(
+  rgba: Uint8Array | Uint8ClampedArray,
+  width: number,
+  height: number,
+): { data: Uint8Array | Uint8ClampedArray; width: number; height: number } {
+  const scale = Math.min(1, MAX_WORKING_DIMENSION / Math.max(width, height));
+  if (scale >= 1) return { data: rgba, width, height };
+  // A plain `new Uint8ClampedArray(length)` (unlike wrapping an existing
+  // typed array) is the one form TS's lib types back with a concrete
+  // ArrayBuffer, which ImageData's constructor requires.
+  const clamped = new Uint8ClampedArray(rgba.length);
+  clamped.set(rgba);
+  const source = new OffscreenCanvas(width, height);
+  source.getContext("2d")!.putImageData(new ImageData(clamped, width, height), 0, 0);
+  const outWidth = Math.max(1, Math.round(width * scale));
+  const outHeight = Math.max(1, Math.round(height * scale));
+  const target = new OffscreenCanvas(outWidth, outHeight);
+  const ctx = target.getContext("2d", { willReadFrequently: true })!;
+  ctx.drawImage(source, 0, 0, outWidth, outHeight);
+  return {
+    data: ctx.getImageData(0, 0, outWidth, outHeight).data,
+    width: outWidth,
+    height: outHeight,
+  };
+}
+
 async function decodeHeic(bytes: Uint8Array): Promise<GrayImage> {
   // Lazy-loaded: the "classic" pure-JS build (no separate .wasm fetch, works
   // synchronously once loaded) adds close to 3 MB, a cost only HEIC imports
@@ -290,7 +331,7 @@ async function decodeHeic(bytes: Uint8Array): Promise<GrayImage> {
   const width = image.get_width(),
     height = image.get_height();
   dimensions(width, height);
-  const rgba = await new Promise<Uint8ClampedArray>((resolve, reject) => {
+  const full = await new Promise<Uint8ClampedArray>((resolve, reject) => {
     image.display(
       { data: new Uint8ClampedArray(width * height * 4), width, height },
       (result) => {
@@ -299,7 +340,13 @@ async function decodeHeic(bytes: Uint8Array): Promise<GrayImage> {
       },
     );
   });
-  return { pixels: fromRGBA(rgba, width, height), width, height, format: "HEIC" };
+  const working = downscaleIfNeeded(full, width, height);
+  return {
+    pixels: fromRGBA(working.data, working.width, working.height),
+    width: working.width,
+    height: working.height,
+    format: "HEIC",
+  };
 }
 
 /** First bytes and metadata as shown to the reader, to diagnose an
@@ -336,10 +383,11 @@ export async function decodeFile(file: File): Promise<GrayImage> {
     dimensions((page.t256 as number[])[0], (page.t257 as number[])[0]);
     UTIF.decodeImage(buffer, page);
     const { width, height } = page;
+    const working = downscaleIfNeeded(UTIF.toRGBA8(page), width, height);
     return {
-      pixels: fromRGBA(UTIF.toRGBA8(page), width, height),
-      width,
-      height,
+      pixels: fromRGBA(working.data, working.width, working.height),
+      width: working.width,
+      height: working.height,
       format: "TIFF",
     };
   }
@@ -351,7 +399,7 @@ export async function decodeFile(file: File): Promise<GrayImage> {
   }
   try {
     return {
-      ...(await decodeBitmap(file)),
+      ...(await decodeBitmap(file, true)),
       format: file.name.split(".").pop()!.toUpperCase(),
     };
   } catch (cause) {
