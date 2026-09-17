@@ -216,8 +216,8 @@ async function decodeDicom(bytes: Uint8Array): Promise<GrayImage> {
 
 // HEIC/HEIF: an ISO base media ("ftyp" box) container, the format iPhones
 // save photos in by default. Neither Chrome nor Firefox can decode it
-// natively, so a converted-first-to-JPEG fallback (via heic2any/libheif,
-// WASM) feeds the same decodeBitmap() path used for JPEG/PNG/etc.
+// natively, so it is decoded with libheif-js (the actual libheif, compiled
+// to run in the browser) instead of createImageBitmap().
 function isHeic(bytes: Uint8Array, file: File): boolean {
   if (/\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]$/.test(file.type))
     return true;
@@ -237,26 +237,53 @@ function isHeic(bytes: Uint8Array, file: File): boolean {
   ].includes(brand);
 }
 
-async function decodeHeic(file: File): Promise<GrayImage> {
-  let converted: Blob;
+// libheif-js ships no type declarations for its high-level HeifDecoder
+// wrapper (only for the low-level, auto-generated Emscripten bindings), so
+// its shape is declared here for the one call site that needs it.
+interface HeifImage {
+  get_width(): number;
+  get_height(): number;
+  display(
+    target: { data: Uint8ClampedArray; width: number; height: number },
+    callback: (result: { data: Uint8ClampedArray } | undefined) => void,
+  ): void;
+}
+interface LibheifModule {
+  HeifDecoder: new () => { decode(bytes: Uint8Array): HeifImage[] };
+}
+
+async function decodeHeic(bytes: Uint8Array): Promise<GrayImage> {
+  // Lazy-loaded: the "classic" pure-JS build (no separate .wasm fetch, works
+  // synchronously once loaded) adds close to 3 MB, a cost only HEIC imports
+  // should pay, not every page load. This is the actual libheif (Emscripten
+  // build), current and actively maintained - unlike the abandoned heic2any
+  // wrapper this replaced, which failed to decode some real-world HEIF files.
+  const { default: libheif } = (await import("libheif-js")) as unknown as {
+    default: LibheifModule;
+  };
+  let images: HeifImage[];
   try {
-    // Lazy-loaded: its WASM decoder is inlined and adds well over 1 MB, cost
-    // only HEIC imports should pay, not every page load.
-    const { default: heic2any } = await import("heic2any");
-    const result = await heic2any({
-      blob: file,
-      toType: "image/jpeg",
-      quality: 0.92,
-    });
-    converted = Array.isArray(result) ? result[0] : result;
+    images = new libheif.HeifDecoder().decode(bytes);
   } catch {
-    throw new Error(t("decode.heicFailed"));
+    images = [];
   }
-  try {
-    return { ...(await decodeBitmap(converted)), format: "HEIC" };
-  } catch {
-    throw new Error(t("decode.failed"));
-  }
+  // decode() does not throw on an unreadable file; it logs to the console
+  // and returns an empty array instead.
+  if (!images.length) throw new Error(t("decode.heicFailed"));
+  const image = images[0];
+  const width = image.get_width(),
+    height = image.get_height();
+  dimensions(width, height);
+  const rgba = await new Promise<Uint8ClampedArray>((resolve, reject) => {
+    image.display(
+      { data: new Uint8ClampedArray(width * height * 4), width, height },
+      (result) => {
+        if (result) resolve(result.data);
+        else reject(new Error(t("decode.heicFailed")));
+      },
+    );
+  });
+  return { pixels: fromRGBA(rgba, width, height), width, height, format: "HEIC" };
 }
 
 export async function decodeFile(file: File): Promise<GrayImage> {
@@ -269,7 +296,7 @@ export async function decodeFile(file: File): Promise<GrayImage> {
     bytes.length > 132 &&
     String.fromCharCode(...bytes.subarray(128, 132)) === "DICM";
   if (isDicom || /\.dcm$/i.test(file.name)) return decodeDicom(bytes);
-  if (isHeic(bytes, file)) return decodeHeic(file);
+  if (isHeic(bytes, file)) return decodeHeic(bytes);
   const isTiff =
     (bytes[0] === 73 && bytes[1] === 73 && bytes[2] === 42) ||
     (bytes[0] === 77 && bytes[1] === 77 && bytes[3] === 42);

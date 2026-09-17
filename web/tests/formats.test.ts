@@ -75,11 +75,10 @@ it("inverts MONOCHROME1 and rejects unsupported compression explicitly", async (
   ).rejects.toThrow("Nicht unterstützte DICOM-Kompression");
 });
 it("routes HEIC files past the unknown-format rejection, by extension and by ftyp brand", async () => {
-  // Not real HEIC pixel data - just enough to prove decodeFile() recognises
-  // and routes the format, rather than falling through to "Format nicht
-  // erkannt". The actual conversion (heic2any/libheif, WASM) needs browser
-  // canvas/image APIs this Node test environment does not provide, so it
-  // fails past that point - with the dedicated HEIC error, not the generic one.
+  // Not real HEIC pixel data, so libheif-js can't parse it (logs a warning
+  // and returns no images rather than throwing) - which is enough to prove
+  // decodeFile() recognises and routes the format, with the dedicated HEIC
+  // error, rather than falling through to "Format nicht erkannt".
   const byExtension = new File([new Uint8Array(20)], "photo.heic");
   await expect(decodeFile(byExtension)).rejects.toThrow(
     "HEIC-Bild konnte nicht konvertiert werden",
