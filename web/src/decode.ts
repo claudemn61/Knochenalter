@@ -218,23 +218,35 @@ async function decodeDicom(bytes: Uint8Array): Promise<GrayImage> {
 // save photos in by default. Neither Chrome nor Firefox can decode it
 // natively, so it is decoded with libheif-js (the actual libheif, compiled
 // to run in the browser) instead of createImageBitmap().
+//
+// The format-identifying brand is not only the "major_brand" (the four
+// bytes right after "ftyp") - a file can also declare it only among the
+// "compatible_brands" that follow, and different encoders (Android
+// manufacturers in particular) are inconsistent about which one carries
+// it. Reading every brand the box lists, not just the first, avoids
+// silently missing a real HEIF file because of that.
+function ftypBrands(bytes: Uint8Array): string[] {
+  if (bytes.length < 16) return [];
+  if (String.fromCharCode(...bytes.subarray(4, 8)) !== "ftyp") return [];
+  const boxSize = new DataView(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.length,
+  ).getUint32(0);
+  const end = Math.min(bytes.length, boxSize > 8 ? boxSize : bytes.length);
+  const brands: string[] = [];
+  // offset 8: major_brand, 12: minor_version (not a brand, harmless to
+  // include), 16+: compatible_brands.
+  for (let offset = 8; offset + 4 <= end; offset += 4)
+    brands.push(String.fromCharCode(...bytes.subarray(offset, offset + 4)));
+  return brands;
+}
 function isHeic(bytes: Uint8Array, file: File): boolean {
   if (/\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]$/.test(file.type))
     return true;
-  if (bytes.length < 12) return false;
-  if (String.fromCharCode(...bytes.subarray(4, 8)) !== "ftyp") return false;
-  const brand = String.fromCharCode(...bytes.subarray(8, 12));
-  return [
-    "heic",
-    "heix",
-    "hevc",
-    "heim",
-    "heis",
-    "hevm",
-    "hevs",
-    "mif1",
-    "msf1",
-  ].includes(brand);
+  return ftypBrands(bytes).some((brand) =>
+    /^(hei[a-z]|hev[a-z]|mif1|msf1|avif|avis)/.test(brand),
+  );
 }
 
 // libheif-js ships no type declarations for its high-level HeifDecoder

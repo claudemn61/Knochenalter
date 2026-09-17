@@ -92,6 +92,31 @@ it("routes HEIC files past the unknown-format rejection, by extension and by fty
     "HEIC-Bild konnte nicht konvertiert werden",
   );
 });
+it("routes HEIF files whose major_brand isn't the HEIF one, but a compatible_brand is", async () => {
+  // Real-world case some devices produce: the box's own major_brand is
+  // something generic (here "isom", a plain ISO-base brand that alone
+  // must not be treated as HEIF - it is also the major_brand of many MP4
+  // videos), and only a later compatible_brand actually says "heic". A
+  // misleading .jpg name must not override what the bytes say either.
+  const box = new Uint8Array(20);
+  new DataView(box.buffer).setUint32(0, 20);
+  box.set(new TextEncoder().encode("ftyp"), 4);
+  box.set(new TextEncoder().encode("isom"), 8);
+  box.set(new TextEncoder().encode("heic"), 16);
+  const file = new File([box], "IMG_1234.jpg", { type: "image/jpeg" });
+  await expect(decodeFile(file)).rejects.toThrow(
+    "HEIC-Bild konnte nicht konvertiert werden",
+  );
+});
+it("does not treat a plain MP4/video ftyp box as HEIF", async () => {
+  const box = new Uint8Array(20);
+  new DataView(box.buffer).setUint32(0, 20);
+  box.set(new TextEncoder().encode("ftyp"), 4);
+  box.set(new TextEncoder().encode("isom"), 8);
+  box.set(new TextEncoder().encode("mp42"), 16);
+  const file = new File([box], "clip.mp4", { type: "video/mp4" });
+  await expect(decodeFile(file)).rejects.toThrow("Format nicht erkannt");
+});
 it("still rejects genuinely unrecognised formats", async () => {
   const mystery = new File(
     [new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])],
