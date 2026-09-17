@@ -640,7 +640,6 @@ function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
     heightCmValueTemplate: t("height.cmValueTemplate"),
     heightPercentValueTemplate: t("height.percentValueTemplate"),
     heightOutOfRange: t("height.outOfRange"),
-    heightFemaleUnsupported: t("height.femaleUnsupported"),
     heightCitation: t("height.citation"),
   };
 }

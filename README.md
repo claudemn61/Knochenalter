@@ -48,15 +48,18 @@ Apache-2.0 lizenziert. Details und Lizenztexte: `web/public/model-license.txt`,
   Die Ensemble-Streuung bleibt separat als technische Kennzahl sichtbar.
 - **Endgrössen-Prognose nach Bayley-Pinneau** (1952) ergänzt: aus aktueller
   Grösse, Skelett- und chronologischem Alter — siehe
-  `web/src/bayley-pinneau.ts`. **Aktuell nur für Jungen**, Mädchen-Tabellen
-  (III A–F) sind noch nicht transkribiert. Bei Jungen mit retardierter
+  `web/src/bayley-pinneau.ts`. Für **Jungen und Mädchen** verfügbar
+  (Tables IIA–IIE bzw. IIIA–IIIF, alle drei Reifungskategorien
+  durchschnittlich/beschleunigt/retardiert). Bei Jungen mit retardierter
   Reifung (Skelettalter ≥ 1 Jahr unter dem chronologischen Alter) deckt
   die Quelle nur bis 13 Jahre Skelettalter ab (Table IIE) — die
   Fortsetzungstabelle (Table IIF) aus dem Original-Artikel (Bayley N,
   Pinneau SR. *J Pediatr.* 1952;40(4):423–441) war nicht zugänglich
   (Bezahlschranke, keine freie Reproduktion gefunden) und wird **nicht
   extrapoliert** — die App zeigt in diesem Fall einen klaren
-  "ausserhalb der Tabelle"-Hinweis statt einer Schätzung.
+  "ausserhalb der Tabelle"-Hinweis statt einer Schätzung. Bei Mädchen ist
+  die entsprechende Tabelle (Table IIIF) vollständig vorhanden, es gibt
+  dort keine Lücke.
 
 ## Entwicklung
 

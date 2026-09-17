@@ -212,8 +212,7 @@ const labels: ReportLabels = {
   heightCmValueTemplate: "{cm} cm",
   heightPercentValueTemplate: "{percent} %",
   heightOutOfRange: "Fora da faixa etária da tabela de referência.",
-  heightFemaleUnsupported: "Ainda não disponível para meninas.",
-  heightCitation: "Bayley & Pinneau, 1952, Tabelas IIA–IIE.",
+  heightCitation: "Bayley & Pinneau, 1952, Tabelas IIA–IIE / IIIA–IIIF.",
   runtimeLabel: "Tempo de execução",
   cropLabel: "Recorte [x0, y0, x1, y1]",
   modelLabel: "Modelo",
@@ -550,15 +549,20 @@ describe("Endgrössen-Prognose (Bayley-Pinneau)", () => {
     });
   });
 
-  it("reports unsupported for girls, without attempting a table lookup", () => {
+  it("reports an ok prediction for girls too (Table IIIA, average)", () => {
     const h = presentReport(
-      input({ sex: "female", chronologicalMonths: 133.6, heightCm: 150 }),
+      input({
+        sex: "female",
+        months: 120, // skeletal age 10-0
+        chronologicalMonths: 120, // 10-0, same -> average
+        heightCm: 150,
+      }),
     ).heightPrediction;
-    expect(h).toEqual({
-      state: "unsupported",
-      heading: labels.heightHeading,
-      message: labels.heightFemaleUnsupported,
-    });
+    if (!h || h.state !== "ok") throw new Error("expected an ok prediction");
+    expect(h.categoryValue).toBe(labels.heightCategoryAverage);
+    expect(h.pmhValue).toBe("86,2 %");
+    // 150 / 0.862 = 174.0139... -> 174.0
+    expect(h.predictedValue).toBe("174,0 cm");
   });
 
   it("is undefined without a height or without a chronological age", () => {

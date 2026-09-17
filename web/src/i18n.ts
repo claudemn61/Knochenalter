@@ -146,7 +146,7 @@ const de = {
 
   "form.heightCm": "Aktuelle Körpergrösse <span>optional, cm</span>",
   "form.heightCmHelp":
-    "Für eine Endgrössen-Prognose nach Bayley-Pinneau (aktuell nur für Jungen verfügbar).",
+    "Für eine Endgrössen-Prognose nach Bayley-Pinneau.",
 
   "height.heading": "Endgrössen-Prognose (Bayley-Pinneau)",
   "height.currentLabel": "Aktuelle Körpergrösse:",
@@ -159,11 +159,9 @@ const de = {
   "height.cmValueTemplate": "{cm} cm",
   "height.percentValueTemplate": "{percent} %",
   "height.outOfRange":
-    "Für dieses Skelettalter liegt keine Bayley-Pinneau-Referenztabelle vor. Bei retardierter Reifung (Skelettalter ≥ 1 Jahr unter dem chronologischen Alter) deckt die verfügbare Tabelle nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
-  "height.femaleUnsupported":
-    "Endgrössen-Prognose aktuell nur für Jungen verfügbar.",
+    "Für dieses Skelettalter liegt keine passende Bayley-Pinneau-Referenztabelle vor (die Tabellen decken je nach Reifungstyp und Geschlecht ungefähr 1 bis 17–18 Jahre Skelettalter ab). Bei retardierten Jungen deckt die verfügbare Tabelle zusätzlich nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
   "height.citation":
-    "Nach Bayley N, Pinneau SR. Tables for Predicting Adult Height from Skeletal Age. J Pediatr. 1952;40(4):423–441 (Tables IIA–IIE, Jungen). Experimentelle Schätzung, keine individuelle Zusicherung — abhängig u. a. von Ernährung, Erkrankungen und familiärer Grösse.",
+    "Nach Bayley N, Pinneau SR. Tables for Predicting Adult Height from Skeletal Age. J Pediatr. 1952;40(4):423–441 (Tables IIA–IIE Jungen, IIIA–IIIF Mädchen). Experimentelle Schätzung, keine individuelle Zusicherung — abhängig u. a. von Ernährung, Erkrankungen und familiärer Grösse.",
 
   "review.open": "Vergrössern und prüfen",
   "review.title": "Bild prüfen",

@@ -1,6 +1,6 @@
 import type { ReportInput } from "./report";
 import { greulichPyleSd } from "./greulich-pyle-sd";
-import { predictAdultHeightBoys } from "./bayley-pinneau";
+import { predictAdultHeight } from "./bayley-pinneau";
 
 const CM_PER_INCH = 2.54;
 
@@ -157,57 +157,51 @@ export function presentReport(input: ReportInput) {
               citation: l.befundCitation,
             };
           })();
-  // Bayley-Pinneau adult height prediction: only offered for boys with a
-  // current height entered and a chronological age available (girls'
-  // tables are not transcribed yet - see src/bayley-pinneau.ts).
+  // Bayley-Pinneau adult height prediction: offered with a current height
+  // entered and a chronological age available (see src/bayley-pinneau.ts).
   const heightPrediction =
     chronological === undefined || input.heightCm === undefined
       ? undefined
-      : input.sex === "female"
-        ? {
-            state: "unsupported" as const,
-            heading: l.heightHeading,
-            message: l.heightFemaleUnsupported,
-          }
-        : (() => {
-            const heightInches = input.heightCm! / CM_PER_INCH;
-            const prediction = predictAdultHeightBoys(
-              heightInches,
-              input.months,
-              chronological,
-            );
-            if (!prediction)
-              return {
-                state: "outOfRange" as const,
-                heading: l.heightHeading,
-                message: l.heightOutOfRange,
-              };
-            const categoryValue =
-              prediction.category === "average"
-                ? l.heightCategoryAverage
-                : prediction.category === "accelerated"
-                  ? l.heightCategoryAccelerated
-                  : l.heightCategoryRetarded;
+      : (() => {
+          const heightInches = input.heightCm! / CM_PER_INCH;
+          const prediction = predictAdultHeight(
+            input.sex,
+            heightInches,
+            input.months,
+            chronological,
+          );
+          if (!prediction)
             return {
-              state: "ok" as const,
+              state: "outOfRange" as const,
               heading: l.heightHeading,
-              currentLabel: l.heightCurrentLabel,
-              currentValue: fill(l.heightCmValueTemplate, {
-                cm: decimal(input.heightCm!, 1),
-              }),
-              categoryLabel: l.heightCategoryLabel,
-              categoryValue,
-              pmhLabel: l.heightPmhLabel,
-              pmhValue: fill(l.heightPercentValueTemplate, {
-                percent: decimal(prediction.pmh, 1),
-              }),
-              predictedLabel: l.heightPredictedLabel,
-              predictedValue: fill(l.heightCmValueTemplate, {
-                cm: decimal(prediction.predictedHeight * CM_PER_INCH, 1),
-              }),
-              citation: l.heightCitation,
+              message: l.heightOutOfRange,
             };
-          })();
+          const categoryValue =
+            prediction.category === "average"
+              ? l.heightCategoryAverage
+              : prediction.category === "accelerated"
+                ? l.heightCategoryAccelerated
+                : l.heightCategoryRetarded;
+          return {
+            state: "ok" as const,
+            heading: l.heightHeading,
+            currentLabel: l.heightCurrentLabel,
+            currentValue: fill(l.heightCmValueTemplate, {
+              cm: decimal(input.heightCm!, 1),
+            }),
+            categoryLabel: l.heightCategoryLabel,
+            categoryValue,
+            pmhLabel: l.heightPmhLabel,
+            pmhValue: fill(l.heightPercentValueTemplate, {
+              percent: decimal(prediction.pmh, 1),
+            }),
+            predictedLabel: l.heightPredictedLabel,
+            predictedValue: fill(l.heightCmValueTemplate, {
+              cm: decimal(prediction.predictedHeight * CM_PER_INCH, 1),
+            }),
+            citation: l.heightCitation,
+          };
+        })();
   const examFields = [
     { label: l.sexLabel, value: l.sexValue },
     {

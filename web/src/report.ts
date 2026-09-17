@@ -216,7 +216,6 @@ export interface ReportLabels {
   /** A percentage value. Template: {percent}. */
   heightPercentValueTemplate: string;
   heightOutOfRange: string;
-  heightFemaleUnsupported: string;
   heightCitation: string;
 }
 
