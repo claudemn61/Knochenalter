@@ -8,18 +8,9 @@ import {
 /* --------------------------------------------------------------- fixtures */
 
 const labels: ReportLabels = {
-  estimatedBoneAgeLabel: "Idade óssea estimada",
-  estimatedAgeText: "11 anos e 2 meses",
-  estimatedBoneAgeCaption: "Média das três redes do ensemble.",
-  chronologicalAgeLabel: "Idade cronológica",
-  chronologicalAgeText: "11 anos e 0 meses",
-  differenceLabel: "Diferença estimada",
   notInformedValue: "Não informada",
   notComputedValue: "Não calculada",
-  stdDevLabel: "Desvio padrão (ensemble)",
-  stdDevValueTemplate: "± {months} meses",
   monthsValueTemplate: "{months} meses",
-  differenceValueTemplate: "{sign}{months} meses",
 
   befundHeading: "Laudo padrão",
   befundBoneAgeLabel: "Idade óssea biológica:",
@@ -52,7 +43,6 @@ const labels: ReportLabels = {
 function input(overrides: Partial<ReportInput> = {}): ReportInput {
   return {
     months: 134.2481,
-    folds: [133.9912, 134.5027, 134.2504],
     sex: "female",
     chronologicalMonths: 133.6,
     locale: "pt-BR",
@@ -64,48 +54,51 @@ function input(overrides: Partial<ReportInput> = {}): ReportInput {
 /* ------------------------------------------------------------------ tests */
 
 describe("headline presentation", () => {
-  it.each([120, 134.2481, 150, undefined, NaN])(
-    "keeps the same displayed ages for chronological age %s",
-    (chronologicalMonths) => {
-      const p = presentReport(input({ chronologicalMonths }));
-      expect(p.estimatedValue).toBe("134,2 meses");
-      if (!Number.isFinite(chronologicalMonths)) {
-        expect(p.chronologicalValue).toBe("Não informada");
-        expect(p.differenceValue).toBe("Não calculada");
-      }
-    },
-  );
-
-  it("distinguishes signed differences, missing age and newborn age", () => {
-    expect(
-      presentReport(input({ chronologicalMonths: 150 })).differenceValue,
-    ).toBe("-15,8 meses");
-    expect(
-      presentReport(input({ chronologicalMonths: 120 })).differenceValue,
-    ).toBe("+14,2 meses");
-    expect(
-      presentReport(input({ months: 0, chronologicalMonths: 0 }))
-        .differenceValue,
-    ).toBe("+0,0 meses");
-    expect(
-      presentReport(input({ chronologicalMonths: 0 })).chronologicalValue,
-    ).toBe("0,0 meses");
+  it("shows the same Jahre/Monate ages and standard deviation as the Befund fields, when in range", () => {
+    // Same fixture as the Befund retardation test below: boys, months=107
+    // (bone age), chronologicalMonths=132.
+    const p = presentReport(
+      input({ sex: "male", months: 107, chronologicalMonths: 132 }),
+    );
+    const b = p.befund;
+    if (!b || b.outOfRange) throw new Error("expected an in-range Befund");
+    expect(p.estimatedAgeValue).toBe(b.boneAgeValue);
+    expect(p.estimatedAgeValue).toBe("8 anos 11 meses");
+    expect(p.chronologicalAgeValue).toBe(b.chronoValue);
+    expect(p.chronologicalAgeValue).toBe("11 anos 0 meses");
+    expect(p.stdDevValue).toBe(b.stdDevValue);
+    expect(p.stdDevValue).toBe("10,5 meses");
   });
 
-  it("computes the ensemble standard deviation from the fold spread", () => {
-    const p = presentReport(input());
-    expect(p.stdDevMonths).toBeCloseTo(0.256, 2);
-    expect(p.stdDevValue).toBe("± 0,26 meses");
-    expect(
-      presentReport(input({ folds: [134.2481] })).stdDevValue,
-    ).toBe("Não calculada");
+  it("still computes the bone age headline without a chronological age, but falls back for the rest", () => {
+    const p = presentReport(input({ chronologicalMonths: undefined }));
+    expect(p.estimatedAgeValue).toBe("11 anos 2 meses");
+    expect(p.chronologicalAgeValue).toBe("Não informada");
+    expect(p.stdDevValue).toBe("Não calculada");
+    expect(p.befund).toBeUndefined();
   });
 
-  it("formats numbers for the requested locale", () => {
-    expect(presentReport(input()).estimatedValue).toBe("134,2 meses");
+  it("falls back the standard deviation, but keeps both ages, when the Befund is out of range", () => {
+    // Girls table ends at 180 months (15y) - see tests/greulich-pyle-sd.test.ts.
+    const p = presentReport(
+      input({ sex: "female", chronologicalMonths: 181 }),
+    );
+    expect(p.befund).toEqual({
+      outOfRange: true,
+      heading: labels.befundHeading,
+      message: labels.befundOutOfRange,
+    });
+    expect(p.stdDevValue).toBe("Não calculada");
+    expect(p.estimatedAgeValue).toBe("11 anos 2 meses");
+    expect(p.chronologicalAgeValue).toBe("15 anos 1 meses");
+  });
+
+  it("formats the standard deviation for the requested locale", () => {
+    const fixture = { sex: "male" as const, months: 107, chronologicalMonths: 132 };
+    expect(presentReport(input(fixture)).stdDevValue).toBe("10,5 meses");
     expect(
-      presentReport(input({ locale: "en-US" })).estimatedValue,
-    ).toBe("134.2 meses");
+      presentReport(input({ ...fixture, locale: "en-US" })).stdDevValue,
+    ).toBe("10.5 meses");
   });
 });
 

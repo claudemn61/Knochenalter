@@ -426,31 +426,20 @@ function showResult(r: Result, scroll = false) {
     el("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function reportInput(r: Result): ReportInput {
-  const chrono = resultChrono(r);
   return {
     months: r.months,
-    folds: [...r.folds],
     sex: r.sex,
-    chronologicalMonths: chrono,
+    chronologicalMonths: resultChrono(r),
     heightCm: r.heightCm ? Number(r.heightCm) : undefined,
     locale: t("app.locale"),
-    labels: reportLabels(r, chrono),
+    labels: reportLabels(),
   };
 }
-function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
+function reportLabels(): ReportLabels {
   return {
-    estimatedBoneAgeLabel: t("result.estimated"),
-    estimatedAgeText: ageText(r.months),
-    estimatedBoneAgeCaption: t("result.ensembleCaption"),
-    chronologicalAgeLabel: t("result.chrono"),
-    chronologicalAgeText: chrono === undefined ? undefined : ageText(chrono),
-    differenceLabel: t("result.difference"),
     notInformedValue: t("result.noChrono"),
     notComputedValue: t("result.notComputed"),
-    stdDevLabel: t("result.stddevLabel"),
-    stdDevValueTemplate: t("result.stddevValueTemplate"),
     monthsValueTemplate: t("result.monthsValue"),
-    differenceValueTemplate: t("result.differenceMonths"),
     befundHeading: t("befund.heading"),
     befundBoneAgeLabel: t("befund.boneAgeLabel"),
     befundChronoLabel: t("befund.chronoLabel"),

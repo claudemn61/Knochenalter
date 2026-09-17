@@ -5,18 +5,9 @@ const CM_PER_INCH = 2.54;
 
 /** Every string the screen can show. Flat on purpose: each field maps to one i18n key. */
 export interface ReportLabels {
-  estimatedBoneAgeLabel: string;
-  estimatedAgeText: string;
-  estimatedBoneAgeCaption: string;
-  chronologicalAgeLabel: string;
-  chronologicalAgeText?: string;
-  differenceLabel: string;
   notInformedValue: string;
   notComputedValue: string;
-  stdDevLabel: string;
-  stdDevValueTemplate: string;
   monthsValueTemplate: string;
-  differenceValueTemplate: string;
 
   /** Standard-Befund block: static labels, values computed per result. */
   befundHeading: string;
@@ -57,8 +48,6 @@ export interface ReportLabels {
 export interface ReportInput {
   /** Ensemble estimate in months. */
   months: number;
-  /** The three individual network outputs, in months; used for the ensemble SD. */
-  folds: number[];
   /** Biological sex given to the network. */
   sex: "male" | "female";
   /** Chronological age in months, or undefined when no date of birth. */
@@ -97,7 +86,13 @@ export function formatInteger(value: number): string {
   return Number.isFinite(value) ? String(Math.round(value)) : String(value);
 }
 
-/** One set of values, rounding rules and field order for the screen. */
+/**
+ * One set of values, rounding rules and field order for the screen. The
+ * headline (estimatedAge/chronologicalAge/stdDev) is deliberately the same
+ * data the Standard-Befund block below prints: same Jahre/Monate formatting,
+ * same Greulich-Pyle standard deviation, sourced from the same `befund`
+ * computation - never a second, differently-rounded copy.
+ */
 export function presentReport(input: ReportInput) {
   const l = input.labels;
   const locale = input.locale || "en-US";
@@ -110,22 +105,6 @@ export function presentReport(input: ReportInput) {
     : undefined;
   const difference =
     chronological === undefined ? undefined : input.months - chronological;
-  const foldValues = Array.isArray(input.folds) ? input.folds : [];
-  // Sample standard deviation (n-1) of the ensemble's individual fold
-  // predictions around their mean (input.months). This is the spread between
-  // the three networks, not a clinical confidence interval for one patient
-  // (see result.stddevNote).
-  const stdDevMonths =
-    foldValues.length > 1
-      ? Math.sqrt(
-          foldValues.reduce((sum, v) => sum + (v - input.months) ** 2, 0) /
-            (foldValues.length - 1),
-        )
-      : undefined;
-  const stdDevValue =
-    stdDevMonths === undefined
-      ? l.notComputedValue
-      : fill(l.stdDevValueTemplate, { months: decimal(stdDevMonths, 2) });
   const yearsMonthsValue = (months: number) => {
     const rounded = Math.round(months);
     const years = Math.floor(rounded / 12);
@@ -137,11 +116,10 @@ export function presentReport(input: ReportInput) {
   };
   // Standard-Befund: classifies the estimate against chronological age ± 2 SD,
   // using the population standard deviation of skeletal age from Greulich &
-  // Pyle (1959), Table V (boys) / Table VI (girls) - not the ensemble spread
-  // above, which measures network disagreement, not population variability.
-  // Only shown with a chronological age (date of birth) inside the table's
-  // range for the given sex (12 months to 17 years for boys, to 15 years for
-  // girls; the source table has no data beyond that for girls).
+  // Pyle (1959), Table V (boys) / Table VI (girls). Only shown with a
+  // chronological age (date of birth) inside the table's range for the given
+  // sex (12 months to 17 years for boys, to 15 years for girls; the source
+  // table has no data beyond that for girls).
   const gpSdMonths =
     chronological === undefined
       ? undefined
@@ -230,20 +208,17 @@ export function presentReport(input: ReportInput) {
   return {
     chronological,
     difference,
-    estimatedValue: monthsValue(input.months),
-    chronologicalValue:
+    // Same Jahre/Monate strings as the Befund fields below - always
+    // computable, independent of whether a Befund can be classified.
+    estimatedAgeValue: yearsMonthsValue(input.months),
+    chronologicalAgeValue:
       chronological === undefined
         ? l.notInformedValue
-        : monthsValue(chronological),
-    differenceValue:
-      difference === undefined
-        ? l.notComputedValue
-        : fill(l.differenceValueTemplate, {
-            sign: difference < 0 ? "-" : "+",
-            months: decimal(Math.abs(difference), 1),
-          }),
-    stdDevMonths,
-    stdDevValue,
+        : yearsMonthsValue(chronological),
+    // The Greulich-Pyle standard deviation the Befund uses, or a fallback
+    // when it cannot be computed (no chronological age, or out of range).
+    stdDevValue:
+      befund && !befund.outOfRange ? befund.stdDevValue : l.notComputedValue,
     befund,
     heightPrediction,
   };

@@ -1,8 +1,20 @@
 :root {
-  --bg: #f5f6f2;
-  --ink: #27362c;
-  --green: #285547;
-  --muted: #778171;
-  --line: #dfe4d9;
+  color-scheme: dark;
+  --bg: #0e1512;
+  --surface: #172420;
+  --surface-2: #1e2f29;
+  --ink: #eef2ec;
+  --muted: #9bad9f;
+  --faint: #708077;
+  --line: #2b3a34;
+  --green: #7fd9ab;
+  --green-deep: #12362a;
+  --green-ink: #08130d;
+  --error-bg: #3a2620;
+  --error-ink: #f2ab97;
+  --error-line: #5c3a30;
+  --notice-bg: #1a2f24;
+  --notice-ink: #bce4c7;
+  --notice-line: #2c4c38;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }

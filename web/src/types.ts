@@ -28,7 +28,6 @@ export interface Manifest {
 }
 export interface Result {
   months: number;
-  folds: number[];
   sex: "male" | "female";
   dob: string;
   examDate: string;

@@ -24,14 +24,10 @@ function fields(id: string, rows: { label: string; value: string }[]) {
 
 export function renderReport(input: ReportInput) {
   const p = presentReport(input);
-  const l = input.labels;
   lastBefund = p.befund;
-  el("result-months").textContent = p.estimatedValue;
-  el("result-age").textContent = l.estimatedAgeText;
+  el("result-months").textContent = p.estimatedAgeValue;
+  el("result-chrono").textContent = p.chronologicalAgeValue;
   el("result-stddev").textContent = p.stdDevValue;
-  el("result-chrono").textContent = p.chronologicalValue;
-  el("result-chrono-age").textContent = l.chronologicalAgeText || "";
-  el("result-difference").textContent = p.differenceValue;
   el("befund-section").hidden = !p.befund;
   el("befund-copy").hidden = !p.befund || p.befund.outOfRange;
   if (p.befund?.outOfRange) {

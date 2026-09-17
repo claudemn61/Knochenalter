@@ -85,14 +85,9 @@ const de = {
   "result.estimated": "Geschätztes Knochenalter",
   "result.ensembleCaption": "Mittelwert der drei Netzwerke",
   "result.chrono": "Chronologisches Alter",
-  "result.difference": "Geschätzte Differenz",
-  "result.stddevLabel": "Standardabweichung (Ensemble)",
-  "result.stddevValueTemplate": "± {months} Monate",
-  "result.stddevNote":
-    "Streuung der drei Einzelnetzwerke — ein Mass für die Uneinigkeit des Ensembles, kein klinisches Konfidenzintervall.",
+  "result.stddev": "Standardabweichung (Greulich-Pyle)",
   "result.noChrono": "Nicht angegeben",
   "result.notComputed": "nicht berechnet",
-  "result.differenceMonths": "{sign}{months} Monate",
   "result.monthsValue": "{months} Monate",
 
   "befund.heading": "Befund",
