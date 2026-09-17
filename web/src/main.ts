@@ -7,7 +7,7 @@ import {
 } from "./processing";
 import type { Crop, GrayImage, Result } from "./types";
 import { buildReportPdf, type ReportInput, type ReportLabels } from "./report";
-import { renderReport } from "./report-view";
+import { currentBefund, renderReport } from "./report-view";
 import { createImageReview } from "./image-review";
 import { readProfessionalAssessment } from "./professional";
 import {
@@ -612,6 +612,17 @@ function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
     differenceValueTemplate: t("result.differenceMonths"),
     cropValueTemplate: t("pdf.cropValue"),
     imageSizeValueTemplate: t("pdf.imageSizeValue"),
+    befundHeading: t("befund.heading"),
+    befundBoneAgeLabel: t("befund.boneAgeLabel"),
+    befundChronoLabel: t("befund.chronoLabel"),
+    befundStdDevLabel: t("befund.stddevLabel"),
+    befundUpperLabel: t("befund.upperLabel"),
+    befundLowerLabel: t("befund.lowerLabel"),
+    befundAgeValueTemplate: t("befund.ageValueTemplate"),
+    befundIntro: t("befund.intro"),
+    befundRetardation: t("befund.retardation"),
+    befundAcceleration: t("befund.acceleration"),
+    befundNormal: t("befund.normal"),
   };
 }
 el("professional-form").addEventListener("submit", (event) => {
@@ -641,6 +652,24 @@ el("professional-remove").addEventListener("click", () => {
   el<HTMLFormElement>("professional-form").reset();
   el("professional-error").hidden = true;
   showResult(result);
+});
+el("befund-copy").addEventListener("click", () => {
+  const b = currentBefund();
+  if (!b) return;
+  const pad = (label: string) => label.padEnd(30, " ");
+  const text = [
+    `${pad(b.boneAgeLabel)}${b.boneAgeValue}`,
+    `${pad(b.chronoLabel)}${b.chronoValue}`,
+    `${pad(b.stdDevLabel)}${b.stdDevValue}`,
+    `${pad(b.upperLabel)}${b.upperValue}`,
+    `${pad(b.lowerLabel)}${b.lowerValue}`,
+    "",
+    b.conclusion,
+  ].join("\n");
+  void navigator.clipboard
+    .writeText(text)
+    .then(() => notice(t("befund.copied")))
+    .catch(() => error(t("befund.copyFailed")));
 });
 el("download-report").addEventListener("click", () => {
   if (!result) return;

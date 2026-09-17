@@ -178,6 +178,24 @@ export interface ReportLabels {
   cropValueTemplate: string;
   /** Pixel size of the analysed image. Template: {width}, {height}. */
   imageSizeValueTemplate: string;
+
+  /** Standard-Befund block: static labels, values computed per result. */
+  befundHeading: string;
+  befundBoneAgeLabel: string;
+  befundChronoLabel: string;
+  befundStdDevLabel: string;
+  befundUpperLabel: string;
+  befundLowerLabel: string;
+  /** A year/month age. Template: {years}, {months}. */
+  befundAgeValueTemplate: string;
+  /** Opening clause of the concluding sentence. */
+  befundIntro: string;
+  /** Closing clause when the bone age is more than 2 SD below chronological age. */
+  befundRetardation: string;
+  /** Closing clause when the bone age is more than 2 SD above chronological age. */
+  befundAcceleration: string;
+  /** Closing clause when the bone age is within 2 SD of chronological age. */
+  befundNormal: string;
 }
 
 export interface ReportInput {
@@ -1476,6 +1494,39 @@ export function buildReportPdf(input: ReportInput): Uint8Array<ArrayBuffer> {
     (value) => monthsValue(value, 0),
   );
   doc.y = cardBottom - 24;
+
+  /* -- Standard-Befund ---------------------------------------------------- */
+
+  if (presentation.befund) {
+    const b = presentation.befund;
+    doc.y -= 4;
+    sectionHeading(doc, b.heading);
+    fieldGrid(
+      doc,
+      [
+        { label: b.boneAgeLabel, value: b.boneAgeValue },
+        { label: b.chronoLabel, value: b.chronoValue },
+        { label: b.stdDevLabel, value: b.stdDevValue },
+        { label: b.upperLabel, value: b.upperValue },
+        { label: b.lowerLabel, value: b.lowerValue },
+      ],
+      3,
+    );
+    const conclusionStack = layoutStack(
+      [
+        {
+          text: b.conclusion,
+          style: { bold: false, size: 9, color: INK, leading: 13 },
+          gapBefore: 0,
+        },
+      ],
+      COLUMN,
+    );
+    ensure(doc, conclusionStack.height + 14);
+    doc.y -= 14;
+    paintStack(doc, conclusionStack, MARGIN_X, doc.y);
+    doc.y -= conclusionStack.height;
+  }
 
   /* -- exam data -------------------------------------------------------- */
 

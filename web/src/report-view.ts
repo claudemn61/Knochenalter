@@ -4,6 +4,10 @@ import { presentReport, scaleOf } from "./report-presentation";
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 
+/** The `befund` block of the presentation last rendered, for the copy button. */
+let lastBefund: ReturnType<typeof presentReport>["befund"];
+export const currentBefund = () => lastBefund;
+
 function fields(id: string, rows: { label: string; value: string }[]) {
   el(id).replaceChildren(
     ...rows.map(({ label, value }) => {
@@ -24,12 +28,24 @@ export function renderReport(
 ) {
   const p = presentReport(input);
   const l = input.labels;
+  lastBefund = p.befund;
   el("result-months").textContent = p.estimatedValue;
   el("result-age").textContent = l.estimatedAgeText;
   el("result-stddev").textContent = p.stdDevValue;
   el("result-chrono").textContent = p.chronologicalValue;
   el("result-chrono-age").textContent = l.chronologicalAgeText || "";
   el("result-difference").textContent = p.differenceValue;
+  el("befund-section").hidden = !p.befund;
+  if (p.befund) {
+    fields("befund-fields", [
+      { label: p.befund.boneAgeLabel, value: p.befund.boneAgeValue },
+      { label: p.befund.chronoLabel, value: p.befund.chronoValue },
+      { label: p.befund.stdDevLabel, value: p.befund.stdDevValue },
+      { label: p.befund.upperLabel, value: p.befund.upperValue },
+      { label: p.befund.lowerLabel, value: p.befund.lowerValue },
+    ]);
+    el("befund-conclusion").textContent = p.befund.conclusion;
+  }
   el("professional-comparison").hidden = !p.professional;
   fields("professional-comparison-data", p.professional?.fields || []);
   fields("result-exam-data", p.examFields);

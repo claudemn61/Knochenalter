@@ -869,6 +869,27 @@ progress::-moz-progress-bar {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+.befund-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.befund-heading h3 {
+  color: var(--green);
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+.befund-conclusion {
+  margin-top: 18px;
+  font-size: 14px;
+  line-height: 1.7;
+}
 .exam-data {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

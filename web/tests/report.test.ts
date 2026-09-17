@@ -188,6 +188,17 @@ const labels: ReportLabels = {
   networkOutputLabelTemplate: "Rede {index}",
   stdDevLabel: "Desvio padrão (ensemble)",
   stdDevValueTemplate: "± {months} meses",
+  befundHeading: "Laudo padrão",
+  befundBoneAgeLabel: "Idade óssea biológica:",
+  befundChronoLabel: "Idade cronológica:",
+  befundStdDevLabel: "Desvio padrão:",
+  befundUpperLabel: "Limite superior (+2 DP):",
+  befundLowerLabel: "Limite inferior (-2 DP):",
+  befundAgeValueTemplate: "{years} anos {months} meses",
+  befundIntro: "Trata-se, portanto, de uma idade óssea",
+  befundRetardation: "com mais de 2 desvios-padrão abaixo da idade cronológica, compatível com retardo.",
+  befundAcceleration: "com mais de 2 desvios-padrão acima da idade cronológica, compatível com aceleração.",
+  befundNormal: "dentro de 2 desvios-padrão da idade cronológica, compatível com achado normal.",
   runtimeLabel: "Tempo de execução",
   cropLabel: "Recorte [x0, y0, x1, y1]",
   modelLabel: "Modelo",
@@ -271,7 +282,7 @@ describe("shared screen/PDF presentation", () => {
     expect(p.estimatedValue).toBe("134,2 meses");
     expect(p.differenceValue).toBe("+0,6 meses");
     const pdf = parsePdf(buildReportPdf(data));
-    expect(pdf.pageCount).toBe(3);
+    expect(pdf.pageCount).toBe(4);
     for (const field of p.professional!.fields) expect(pdf.text).toContain(encodeWinAnsi(field.value));
     expect(presentReport(input()).professional).toBeUndefined();
   });
@@ -362,10 +373,93 @@ describe("PDF container", () => {
     }
   });
 
-  it("fits the report in no more than two pages", () => {
+  it("fits the report in no more than three pages", () => {
+    // Was two pages upstream; the added Standard-Befund section (German
+    // fork) costs one more page in the common case (chronological age +
+    // standard deviation both present).
     const parsed = parsePdf(buildReportPdf(input()));
     expect(parsed.pageCount).toBeGreaterThanOrEqual(1);
-    expect(parsed.pageCount).toBeLessThanOrEqual(2);
+    expect(parsed.pageCount).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("Standard-Befund", () => {
+  it("classifies more than 2 SD below chronological age as retardation", () => {
+    const p = presentReport(
+      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 110 }),
+    );
+    expect(p.befund).toEqual({
+      heading: labels.befundHeading,
+      boneAgeLabel: labels.befundBoneAgeLabel,
+      boneAgeValue: "8 anos 4 meses",
+      chronoLabel: labels.befundChronoLabel,
+      chronoValue: "9 anos 2 meses",
+      stdDevLabel: labels.befundStdDevLabel,
+      stdDevValue: "1 meses",
+      upperLabel: labels.befundUpperLabel,
+      upperValue: "9 anos 4 meses",
+      lowerLabel: labels.befundLowerLabel,
+      lowerValue: "9 anos 0 meses",
+      conclusion: `${labels.befundIntro} ${labels.befundRetardation}`,
+    });
+  });
+
+  it("classifies more than 2 SD above chronological age as acceleration", () => {
+    const p = presentReport(
+      input({ months: 120, folds: [119, 120, 121], chronologicalMonths: 108 }),
+    );
+    expect(p.befund?.conclusion).toBe(
+      `${labels.befundIntro} ${labels.befundAcceleration}`,
+    );
+    expect(p.befund?.upperValue).toBe("9 anos 2 meses");
+    expect(p.befund?.lowerValue).toBe("8 anos 10 meses");
+  });
+
+  it("classifies within 2 SD of chronological age as normal, boundary inclusive", () => {
+    const p = presentReport(
+      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 101 }),
+    );
+    expect(p.befund?.conclusion).toBe(
+      `${labels.befundIntro} ${labels.befundNormal}`,
+    );
+    // Exactly at the +2 SD boundary (chronological - months === threshold):
+    // "within" is boundary-inclusive, not "more than".
+    const boundary = presentReport(
+      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 102 }),
+    );
+    expect(boundary.befund?.conclusion).toBe(
+      `${labels.befundIntro} ${labels.befundNormal}`,
+    );
+  });
+
+  it("never goes below zero for the lower bound", () => {
+    const p = presentReport(
+      input({ months: 5, folds: [3, 5, 7], chronologicalMonths: 4 }),
+    );
+    expect(p.befund?.lowerValue).toBe("0 anos 0 meses");
+  });
+
+  it("is printed in the PDF, and omitted when there is no chronological age", () => {
+    const text = latin1(buildReportPdf(input()));
+    expect(text).toContain(encodeWinAnsi(labels.befundHeading));
+    expect(text).toContain(encodeWinAnsi(labels.befundBoneAgeLabel));
+    // Default fixture: months 134.2481 vs chronologicalMonths 133.6, SD ~0.26
+    // -> +0.65 months is more than 2 SD above chronological age. The full
+    // sentence wraps across lines in the PDF, so check a single word from it.
+    expect(text).toContain(encodeWinAnsi("aceleração"));
+    const withoutDob = latin1(
+      buildReportPdf(input({ chronologicalMonths: undefined })),
+    );
+    expect(withoutDob).not.toContain(encodeWinAnsi(labels.befundHeading));
+  });
+
+  it("is undefined without a chronological age or without enough folds", () => {
+    expect(
+      presentReport(input({ chronologicalMonths: undefined })).befund,
+    ).toBeUndefined();
+    expect(
+      presentReport(input({ folds: [134.2481] })).befund,
+    ).toBeUndefined();
   });
 });
 

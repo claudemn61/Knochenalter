@@ -118,6 +118,28 @@ const de = {
   "result.stddevValueTemplate": "± {months} Monate",
   "result.stddevNote":
     "Streuung der drei Einzelnetzwerke — ein Mass für die Uneinigkeit des Ensembles, kein klinisches Konfidenzintervall.",
+
+  "befund.heading": "Befund",
+  "befund.boneAgeLabel": "Biologisches Knochenalter:",
+  "befund.chronoLabel": "Chronologisches Alter:",
+  "befund.stddevLabel": "Standardabweichung:",
+  "befund.upperLabel": "Obere Grenze (+2 SD):",
+  "befund.lowerLabel": "Untere Grenze (-2 SD):",
+  "befund.ageValueTemplate": "{years} Jahre {months} Monate",
+  "befund.intro": "Somit handelt es sich um ein Knochenalter",
+  "befund.retardation":
+    "mit mehr als 2-facher Standardabweichung unterhalb des chronologischen Alters, einer Retardierung entsprechend.",
+  "befund.acceleration":
+    "mit mehr als 2-facher Standardabweichung oberhalb des chronologischen Alters, einer Beschleunigung entsprechend.",
+  "befund.normal":
+    "innerhalb der 2-fachen Standardabweichung zum chronologischen Alter, einem Normbefund entsprechend.",
+  "befund.unavailable":
+    "Für den Standard-Befund wird ein Geburtsdatum benötigt (chronologisches Alter).",
+  "befund.copy": "Befund-Text kopieren",
+  "befund.copied": "Befund-Text in die Zwischenablage kopiert.",
+  "befund.copyFailed":
+    "Kopieren nicht möglich. Bitte den Text manuell auswählen und kopieren.",
+
   "review.open": "Vergrössern und prüfen",
   "review.title": "Bild prüfen",
   "review.close": "Schliessen",

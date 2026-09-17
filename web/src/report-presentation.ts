@@ -97,6 +97,44 @@ export function presentReport(input: ReportInput) {
     stdDevMonths === undefined
       ? l.notComputedValue
       : fill(l.stdDevValueTemplate, { months: decimal(stdDevMonths, 2) });
+  const yearsMonthsValue = (months: number) => {
+    const rounded = Math.round(months);
+    const years = Math.floor(rounded / 12);
+    const remMonths = rounded % 12;
+    return fill(l.befundAgeValueTemplate, {
+      years: formatInteger(years),
+      months: formatInteger(remMonths),
+    });
+  };
+  // Standard-Befund: classifies the estimate against chronological age ± 2 SD
+  // of the ensemble spread. Only shown when both a chronological age (date of
+  // birth) and a standard deviation (at least two folds) are available.
+  const befund =
+    chronological === undefined || stdDevMonths === undefined
+      ? undefined
+      : (() => {
+          const threshold = 2 * stdDevMonths;
+          const conclusionClause =
+            difference! < -threshold
+              ? l.befundRetardation
+              : difference! > threshold
+                ? l.befundAcceleration
+                : l.befundNormal;
+          return {
+            heading: l.befundHeading,
+            boneAgeLabel: l.befundBoneAgeLabel,
+            boneAgeValue: yearsMonthsValue(input.months),
+            chronoLabel: l.befundChronoLabel,
+            chronoValue: yearsMonthsValue(chronological),
+            stdDevLabel: l.befundStdDevLabel,
+            stdDevValue: monthsValue(stdDevMonths, 0),
+            upperLabel: l.befundUpperLabel,
+            upperValue: yearsMonthsValue(chronological + threshold),
+            lowerLabel: l.befundLowerLabel,
+            lowerValue: yearsMonthsValue(Math.max(0, chronological - threshold)),
+            conclusion: `${l.befundIntro} ${conclusionClause}`,
+          };
+        })();
   const examFields = [
     { label: l.sexLabel, value: l.sexValue },
     {
@@ -178,6 +216,7 @@ export function presentReport(input: ReportInput) {
     meanValue: monthsValue(input.months, 4),
     stdDevMonths,
     stdDevValue,
+    befund,
     examFields,
     technicalFields,
     folds,
