@@ -199,6 +199,8 @@ const labels: ReportLabels = {
   befundRetardation: "com mais de 2 desvios-padrão abaixo da idade cronológica, compatível com retardo.",
   befundAcceleration: "com mais de 2 desvios-padrão acima da idade cronológica, compatível com aceleração.",
   befundNormal: "dentro de 2 desvios-padrão da idade cronológica, compatível com achado normal.",
+  befundOutOfRange: "Fora da faixa etária da tabela de referência.",
+  befundCitation: "Greulich & Pyle, 1959, Tabelas V/VI.",
   runtimeLabel: "Tempo de execução",
   cropLabel: "Recorte [x0, y0, x1, y1]",
   modelLabel: "Modelo",
@@ -383,82 +385,119 @@ describe("PDF container", () => {
   });
 });
 
-describe("Standard-Befund", () => {
+// Reference points transcribed from Greulich & Pyle (1959), Table V (boys)
+// / Table VI (girls) - see src/greulich-pyle-sd.ts. Chosen at exact table
+// ages to keep the expected numbers unambiguous (interpolation itself is
+// covered by tests/greulich-pyle-sd.test.ts).
+describe("Standard-Befund (Greulich-Pyle)", () => {
   it("classifies more than 2 SD below chronological age as retardation", () => {
+    // Boys, 132 months (11y): table SD 10.5 -> threshold 21 months.
     const p = presentReport(
-      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 110 }),
+      input({ sex: "male", months: 107, chronologicalMonths: 132 }),
     );
     expect(p.befund).toEqual({
+      outOfRange: false,
       heading: labels.befundHeading,
       boneAgeLabel: labels.befundBoneAgeLabel,
-      boneAgeValue: "8 anos 4 meses",
+      boneAgeValue: "8 anos 11 meses",
       chronoLabel: labels.befundChronoLabel,
-      chronoValue: "9 anos 2 meses",
+      chronoValue: "11 anos 0 meses",
       stdDevLabel: labels.befundStdDevLabel,
-      stdDevValue: "1 meses",
+      stdDevValue: "10,5 meses",
       upperLabel: labels.befundUpperLabel,
-      upperValue: "9 anos 4 meses",
+      upperValue: "12 anos 9 meses",
       lowerLabel: labels.befundLowerLabel,
-      lowerValue: "9 anos 0 meses",
+      lowerValue: "9 anos 3 meses",
       conclusion: `${labels.befundIntro} ${labels.befundRetardation}`,
+      citation: labels.befundCitation,
     });
   });
 
   it("classifies more than 2 SD above chronological age as acceleration", () => {
+    // Girls, 96 months (8y): table SD 8.8 -> threshold 17.6 months.
     const p = presentReport(
-      input({ months: 120, folds: [119, 120, 121], chronologicalMonths: 108 }),
+      input({ sex: "female", months: 116, chronologicalMonths: 96 }),
     );
-    expect(p.befund?.conclusion).toBe(
+    const b = p.befund;
+    if (!b || b.outOfRange) throw new Error("expected an in-range Befund");
+    expect(b.conclusion).toBe(
       `${labels.befundIntro} ${labels.befundAcceleration}`,
     );
-    expect(p.befund?.upperValue).toBe("9 anos 2 meses");
-    expect(p.befund?.lowerValue).toBe("8 anos 10 meses");
+    expect(b.stdDevValue).toBe("8,8 meses");
+    expect(b.upperValue).toBe("9 anos 6 meses");
+    expect(b.lowerValue).toBe("6 anos 6 meses");
   });
 
   it("classifies within 2 SD of chronological age as normal, boundary inclusive", () => {
-    const p = presentReport(
-      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 101 }),
-    );
-    expect(p.befund?.conclusion).toBe(
+    // Boys, 60 months (5y): table SD 8.4 -> threshold 16.8 months.
+    const inside = presentReport(
+      input({ sex: "male", months: 65, chronologicalMonths: 60 }),
+    ).befund;
+    if (!inside || inside.outOfRange)
+      throw new Error("expected an in-range Befund");
+    expect(inside.conclusion).toBe(
       `${labels.befundIntro} ${labels.befundNormal}`,
     );
-    // Exactly at the +2 SD boundary (chronological - months === threshold):
-    // "within" is boundary-inclusive, not "more than".
+    // Exactly at the -2 SD boundary: "within" is boundary-inclusive, not
+    // "more than".
     const boundary = presentReport(
-      input({ months: 100, folds: [99, 100, 101], chronologicalMonths: 102 }),
-    );
-    expect(boundary.befund?.conclusion).toBe(
+      input({ sex: "male", months: 43.2, chronologicalMonths: 60 }),
+    ).befund;
+    if (!boundary || boundary.outOfRange)
+      throw new Error("expected an in-range Befund");
+    expect(boundary.conclusion).toBe(
       `${labels.befundIntro} ${labels.befundNormal}`,
     );
   });
 
-  it("never goes below zero for the lower bound", () => {
-    const p = presentReport(
-      input({ months: 5, folds: [3, 5, 7], chronologicalMonths: 4 }),
-    );
-    expect(p.befund?.lowerValue).toBe("0 anos 0 meses");
+  it("is out of range below 12 months and above the table for the sex", () => {
+    // Boys table reaches 204 months (17y); girls only to 180 months (15y),
+    // with no continuation in the source (confirmed against the printed book).
+    for (const overrides of [
+      { sex: "male" as const, chronologicalMonths: 6 },
+      { sex: "male" as const, chronologicalMonths: 205 },
+      { sex: "female" as const, chronologicalMonths: 181 },
+    ]) {
+      const p = presentReport(input(overrides));
+      expect(p.befund).toEqual({
+        outOfRange: true,
+        heading: labels.befundHeading,
+        message: labels.befundOutOfRange,
+      });
+    }
   });
 
-  it("is printed in the PDF, and omitted when there is no chronological age", () => {
+  it("is printed in the PDF, with citation, and omitted without a chronological age", () => {
+    // Default fixture: female, 133.6 months chronological -> interpolated
+    // table SD ~12.5 months, threshold ~25 -> the +0.65-month difference is
+    // well within range, i.e. a normal finding.
     const text = latin1(buildReportPdf(input()));
     expect(text).toContain(encodeWinAnsi(labels.befundHeading));
     expect(text).toContain(encodeWinAnsi(labels.befundBoneAgeLabel));
-    // Default fixture: months 134.2481 vs chronologicalMonths 133.6, SD ~0.26
-    // -> +0.65 months is more than 2 SD above chronological age. The full
-    // sentence wraps across lines in the PDF, so check a single word from it.
-    expect(text).toContain(encodeWinAnsi("aceleração"));
+    expect(text).toContain(encodeWinAnsi(labels.befundCitation));
+    // The full sentence wraps across lines in the PDF; check a single word.
+    expect(text).toContain(encodeWinAnsi("achado"));
     const withoutDob = latin1(
       buildReportPdf(input({ chronologicalMonths: undefined })),
     );
     expect(withoutDob).not.toContain(encodeWinAnsi(labels.befundHeading));
   });
 
-  it("is undefined without a chronological age or without enough folds", () => {
+  it("prints the out-of-range message instead of fields or citation", () => {
+    const text = latin1(
+      buildReportPdf(
+        input({ sex: "female", chronologicalMonths: 181 }),
+      ),
+    );
+    expect(text).toContain(encodeWinAnsi(labels.befundHeading));
+    expect(text).toContain(encodeWinAnsi(labels.befundOutOfRange));
+    expect(text).not.toContain(encodeWinAnsi(labels.befundBoneAgeLabel));
+    expect(text).not.toContain(encodeWinAnsi(labels.befundCitation));
+  });
+
+  it("is undefined without a chronological age", () => {
     expect(
       presentReport(input({ chronologicalMonths: undefined })).befund,
-    ).toBeUndefined();
-    expect(
-      presentReport(input({ folds: [134.2481] })).befund,
     ).toBeUndefined();
   });
 });

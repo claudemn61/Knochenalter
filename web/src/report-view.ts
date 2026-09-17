@@ -36,7 +36,12 @@ export function renderReport(
   el("result-chrono-age").textContent = l.chronologicalAgeText || "";
   el("result-difference").textContent = p.differenceValue;
   el("befund-section").hidden = !p.befund;
-  if (p.befund) {
+  el("befund-copy").hidden = !p.befund || p.befund.outOfRange;
+  if (p.befund?.outOfRange) {
+    fields("befund-fields", []);
+    el("befund-conclusion").textContent = p.befund.message;
+    el("befund-citation").textContent = "";
+  } else if (p.befund) {
     fields("befund-fields", [
       { label: p.befund.boneAgeLabel, value: p.befund.boneAgeValue },
       { label: p.befund.chronoLabel, value: p.befund.chronoValue },
@@ -45,6 +50,7 @@ export function renderReport(
       { label: p.befund.lowerLabel, value: p.befund.lowerValue },
     ]);
     el("befund-conclusion").textContent = p.befund.conclusion;
+    el("befund-citation").textContent = p.befund.citation;
   }
   el("professional-comparison").hidden = !p.professional;
   fields("professional-comparison-data", p.professional?.fields || []);

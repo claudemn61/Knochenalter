@@ -122,7 +122,7 @@ const de = {
   "befund.heading": "Befund",
   "befund.boneAgeLabel": "Biologisches Knochenalter:",
   "befund.chronoLabel": "Chronologisches Alter:",
-  "befund.stddevLabel": "Standardabweichung:",
+  "befund.stddevLabel": "Standardabweichung (Greulich-Pyle):",
   "befund.upperLabel": "Obere Grenze (+2 SD):",
   "befund.lowerLabel": "Untere Grenze (-2 SD):",
   "befund.ageValueTemplate": "{years} Jahre {months} Monate",
@@ -135,6 +135,10 @@ const de = {
     "innerhalb der 2-fachen Standardabweichung zum chronologischen Alter, einem Normbefund entsprechend.",
   "befund.unavailable":
     "Für den Standard-Befund wird ein Geburtsdatum benötigt (chronologisches Alter).",
+  "befund.outOfRange":
+    "Für dieses chronologische Alter liegt keine Greulich-Pyle-Referenz-Standardabweichung vor (Tabelle deckt bei Jungen 1–17 Jahre, bei Mädchen 1–15 Jahre ab). Kein Standard-Befund möglich.",
+  "befund.citation":
+    "Referenz-Standardabweichung nach Greulich WW, Pyle SI. Radiographic Atlas of Skeletal Development of the Hand and Wrist, 2. Auflage, Stanford University Press, 1959 (Tabelle V/VI).",
   "befund.copy": "Befund-Text kopieren",
   "befund.copied": "Befund-Text in die Zwischenablage kopiert.",
   "befund.copyFailed":

@@ -1,4 +1,5 @@
 import type { ReportInput } from "./report";
+import { greulichPyleSd } from "./greulich-pyle-sd";
 
 export function fill(template: string, values: Record<string, string>): string {
   return String(template ?? "").replace(/\{(\w+)\}/g, (match, key: string) =>
@@ -106,35 +107,53 @@ export function presentReport(input: ReportInput) {
       months: formatInteger(remMonths),
     });
   };
-  // Standard-Befund: classifies the estimate against chronological age ± 2 SD
-  // of the ensemble spread. Only shown when both a chronological age (date of
-  // birth) and a standard deviation (at least two folds) are available.
-  const befund =
-    chronological === undefined || stdDevMonths === undefined
+  // Standard-Befund: classifies the estimate against chronological age ± 2 SD,
+  // using the population standard deviation of skeletal age from Greulich &
+  // Pyle (1959), Table V (boys) / Table VI (girls) - not the ensemble spread
+  // above, which measures network disagreement, not population variability.
+  // Only shown with a chronological age (date of birth) inside the table's
+  // range for the given sex (12 months to 17 years for boys, to 15 years for
+  // girls; the source table has no data beyond that for girls).
+  const gpSdMonths =
+    chronological === undefined
       ? undefined
-      : (() => {
-          const threshold = 2 * stdDevMonths;
-          const conclusionClause =
-            difference! < -threshold
-              ? l.befundRetardation
-              : difference! > threshold
-                ? l.befundAcceleration
-                : l.befundNormal;
-          return {
+      : greulichPyleSd(chronological, input.sex);
+  const befund =
+    chronological === undefined
+      ? undefined
+      : gpSdMonths === undefined
+        ? {
+            outOfRange: true as const,
             heading: l.befundHeading,
-            boneAgeLabel: l.befundBoneAgeLabel,
-            boneAgeValue: yearsMonthsValue(input.months),
-            chronoLabel: l.befundChronoLabel,
-            chronoValue: yearsMonthsValue(chronological),
-            stdDevLabel: l.befundStdDevLabel,
-            stdDevValue: monthsValue(stdDevMonths, 0),
-            upperLabel: l.befundUpperLabel,
-            upperValue: yearsMonthsValue(chronological + threshold),
-            lowerLabel: l.befundLowerLabel,
-            lowerValue: yearsMonthsValue(Math.max(0, chronological - threshold)),
-            conclusion: `${l.befundIntro} ${conclusionClause}`,
-          };
-        })();
+            message: l.befundOutOfRange,
+          }
+        : (() => {
+            const threshold = 2 * gpSdMonths;
+            const conclusionClause =
+              difference! < -threshold
+                ? l.befundRetardation
+                : difference! > threshold
+                  ? l.befundAcceleration
+                  : l.befundNormal;
+            return {
+              outOfRange: false as const,
+              heading: l.befundHeading,
+              boneAgeLabel: l.befundBoneAgeLabel,
+              boneAgeValue: yearsMonthsValue(input.months),
+              chronoLabel: l.befundChronoLabel,
+              chronoValue: yearsMonthsValue(chronological),
+              stdDevLabel: l.befundStdDevLabel,
+              stdDevValue: monthsValue(gpSdMonths, 1),
+              upperLabel: l.befundUpperLabel,
+              upperValue: yearsMonthsValue(chronological + threshold),
+              lowerLabel: l.befundLowerLabel,
+              lowerValue: yearsMonthsValue(
+                Math.max(0, chronological - threshold),
+              ),
+              conclusion: `${l.befundIntro} ${conclusionClause}`,
+              citation: l.befundCitation,
+            };
+          })();
   const examFields = [
     { label: l.sexLabel, value: l.sexValue },
     {

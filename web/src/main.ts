@@ -623,6 +623,8 @@ function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
     befundRetardation: t("befund.retardation"),
     befundAcceleration: t("befund.acceleration"),
     befundNormal: t("befund.normal"),
+    befundOutOfRange: t("befund.outOfRange"),
+    befundCitation: t("befund.citation"),
   };
 }
 el("professional-form").addEventListener("submit", (event) => {
@@ -655,7 +657,7 @@ el("professional-remove").addEventListener("click", () => {
 });
 el("befund-copy").addEventListener("click", () => {
   const b = currentBefund();
-  if (!b) return;
+  if (!b || b.outOfRange) return;
   const pad = (label: string) => label.padEnd(30, " ");
   const text = [
     `${pad(b.boneAgeLabel)}${b.boneAgeValue}`,

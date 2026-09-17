@@ -196,6 +196,11 @@ export interface ReportLabels {
   befundAcceleration: string;
   /** Closing clause when the bone age is within 2 SD of chronological age. */
   befundNormal: string;
+  /** Shown instead of the fields when the chronological age is outside the
+   * Greulich-Pyle table's range for the given sex. */
+  befundOutOfRange: string;
+  /** Source citation for the Greulich-Pyle standard deviation table. */
+  befundCitation: string;
 }
 
 export interface ReportInput {
@@ -1501,31 +1506,52 @@ export function buildReportPdf(input: ReportInput): Uint8Array<ArrayBuffer> {
     const b = presentation.befund;
     doc.y -= 4;
     sectionHeading(doc, b.heading);
-    fieldGrid(
-      doc,
-      [
-        { label: b.boneAgeLabel, value: b.boneAgeValue },
-        { label: b.chronoLabel, value: b.chronoValue },
-        { label: b.stdDevLabel, value: b.stdDevValue },
-        { label: b.upperLabel, value: b.upperValue },
-        { label: b.lowerLabel, value: b.lowerValue },
-      ],
-      3,
-    );
-    const conclusionStack = layoutStack(
-      [
-        {
-          text: b.conclusion,
-          style: { bold: false, size: 9, color: INK, leading: 13 },
-          gapBefore: 0,
-        },
-      ],
-      COLUMN,
-    );
-    ensure(doc, conclusionStack.height + 14);
-    doc.y -= 14;
-    paintStack(doc, conclusionStack, MARGIN_X, doc.y);
-    doc.y -= conclusionStack.height;
+    if (b.outOfRange) {
+      const messageStack = layoutStack(
+        [
+          {
+            text: b.message,
+            style: { bold: false, size: 9, color: INK, leading: 13 },
+            gapBefore: 0,
+          },
+        ],
+        COLUMN,
+      );
+      ensure(doc, messageStack.height + 4);
+      paintStack(doc, messageStack, MARGIN_X, doc.y);
+      doc.y -= messageStack.height + 10;
+    } else {
+      fieldGrid(
+        doc,
+        [
+          { label: b.boneAgeLabel, value: b.boneAgeValue },
+          { label: b.chronoLabel, value: b.chronoValue },
+          { label: b.stdDevLabel, value: b.stdDevValue },
+          { label: b.upperLabel, value: b.upperValue },
+          { label: b.lowerLabel, value: b.lowerValue },
+        ],
+        3,
+      );
+      const conclusionStack = layoutStack(
+        [
+          {
+            text: b.conclusion,
+            style: { bold: false, size: 9, color: INK, leading: 13 },
+            gapBefore: 0,
+          },
+          {
+            text: b.citation,
+            style: { bold: false, size: 7, color: MUTED, leading: 10 },
+            gapBefore: 6,
+          },
+        ],
+        COLUMN,
+      );
+      ensure(doc, conclusionStack.height + 14);
+      doc.y -= 14;
+      paintStack(doc, conclusionStack, MARGIN_X, doc.y);
+      doc.y -= conclusionStack.height;
+    }
   }
 
   /* -- exam data -------------------------------------------------------- */
