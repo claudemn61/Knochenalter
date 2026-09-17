@@ -467,9 +467,6 @@ function reportLabels(): ReportLabels {
     heightCitation: t("height.citation"),
   };
 }
-function escapeHtml(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 el("befund-copy").addEventListener("click", () => {
   const b = currentBefund();
   if (!b || b.outOfRange) return;
@@ -480,53 +477,24 @@ el("befund-copy").addEventListener("click", () => {
     [b.upperLabel, b.upperValue],
     [b.lowerLabel, b.lowerValue],
   ];
-  // Plain-text fallback (monospace targets: Notepad, terminals, code
-  // editors) keeps padding-based alignment; it cannot align in a
-  // proportional font, which is what the HTML table below is for.
-  const pad = (label: string) => label.padEnd(30, " ");
-  const plain = [
-    ...rows.map(([label, value]) => `${pad(label)}${value}`),
+  // Plain text only, tab-separated - deliberately not HTML. Every rich-text
+  // attempt (a <table>; then a table-free <div>/<span> layout) still ended
+  // up rendered as an editable table cell/box in the reader's target app
+  // (Word, Apple Notes, Apple Pages), which is worse for them than losing
+  // exact alignment: it locks the pasted text behind that app's own table
+  // editing instead of plain, freely reformattable text. A tab character
+  // is just text - it cannot be "upgraded" into a table by any app's paste
+  // handler - and still gives the reader something to align if they want
+  // to (their word processor's own tab stops, or "convert text to table").
+  const text = [
+    ...rows.map(([label, value]) => `${label}\t${value}`),
     "",
     b.conclusion,
   ].join("\n");
-  // Rich-text target (Word, Mail, browsers): fixed-width inline-block spans
-  // line up the years/months values strictly left-aligned regardless of
-  // label length, in Arial 9.5pt. Deliberately not a <table>: several
-  // note/document apps (Apple Notes among them) ignore a pasted table's
-  // own styling entirely and re-render it as their own bordered, shaded
-  // "smart table" widget - exactly the visible grid this must not show.
-  // Plain <div>/<span> survive as styled text instead of being upgraded
-  // to a table object. 180px comfortably fits the longest label
-  // ("Biologisches Knochenalter:", ~153px in Arial 9.5pt) without wrapping.
-  const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
-  const labelWidth = "180px";
-  const row = (label: string, value: string) =>
-    `<div style="white-space:nowrap; margin:0 0 4px; ${font}">` +
-    `<span style="display:inline-block; width:${labelWidth}; vertical-align:top; white-space:nowrap;">${escapeHtml(label)}</span>` +
-    `<span>${escapeHtml(value)}</span>` +
-    `</div>`;
-  const html =
-    `<div style="${font}">` +
-    rows.map(([label, value]) => row(label, value)).join("") +
-    `<div style="margin:12px 0 0; ${font}">${escapeHtml(b.conclusion)}</div>` +
-    `</div>`;
-  void (async () => {
-    try {
-      if (typeof ClipboardItem !== "undefined") {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "text/plain": new Blob([plain], { type: "text/plain" }),
-            "text/html": new Blob([html], { type: "text/html" }),
-          }),
-        ]);
-      } else {
-        await navigator.clipboard.writeText(plain);
-      }
-      notice(t("befund.copied"));
-    } catch {
-      error(t("befund.copyFailed"));
-    }
-  })();
+  void navigator.clipboard
+    .writeText(text)
+    .then(() => notice(t("befund.copied")))
+    .catch(() => error(t("befund.copyFailed")));
 });
 el("reset").addEventListener("click", () => {
   ++fileGeneration;
