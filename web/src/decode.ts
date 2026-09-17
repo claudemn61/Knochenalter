@@ -298,6 +298,15 @@ async function decodeHeic(bytes: Uint8Array): Promise<GrayImage> {
   return { pixels: fromRGBA(rgba, width, height), width, height, format: "HEIC" };
 }
 
+/** First bytes and metadata as shown to the reader, to diagnose an
+ * unrecognised or undecodable file without needing the browser console. */
+function diagnostics(file: File, bytes: Uint8Array): string {
+  const hex = [...bytes.subarray(0, 16)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join(" ");
+  return `[${file.name || "ohne Namen"} · ${file.type || "kein Typ"} · ${hex}]`;
+}
+
 export async function decodeFile(file: File): Promise<GrayImage> {
   if (file.size > 100 * 1024 * 1024)
     throw new Error(t("decode.tooLarge"));
@@ -334,9 +343,7 @@ export async function decodeFile(file: File): Promise<GrayImage> {
     !/^image\/(png|jpeg|webp|bmp|avif)$/.test(file.type) &&
     !/\.(png|jpe?g|webp|bmp|avif)$/i.test(file.name)
   ) {
-    throw new Error(
-      t("decode.unknownFormat"),
-    );
+    throw new Error(`${t("decode.unknownFormat")} ${diagnostics(file, bytes)}`);
   }
   try {
     return {
@@ -344,8 +351,6 @@ export async function decodeFile(file: File): Promise<GrayImage> {
       format: file.name.split(".").pop()!.toUpperCase(),
     };
   } catch {
-    throw new Error(
-      t("decode.failed"),
-    );
+    throw new Error(`${t("decode.failed")} ${diagnostics(file, bytes)}`);
   }
 }
