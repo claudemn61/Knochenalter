@@ -477,24 +477,56 @@ el("befund-copy").addEventListener("click", () => {
     [b.upperLabel, b.upperValue],
     [b.lowerLabel, b.lowerValue],
   ];
-  // Plain text only, tab-separated - deliberately not HTML. Every rich-text
-  // attempt (a <table>; then a table-free <div>/<span> layout) still ended
-  // up rendered as an editable table cell/box in the reader's target app
-  // (Word, Apple Notes, Apple Pages), which is worse for them than losing
-  // exact alignment: it locks the pasted text behind that app's own table
-  // editing instead of plain, freely reformattable text. A tab character
-  // is just text - it cannot be "upgraded" into a table by any app's paste
-  // handler - and still gives the reader something to align if they want
-  // to (their word processor's own tab stops, or "convert text to table").
-  const text = [
-    ...rows.map(([label, value]) => `${label}\t${value}`),
+  // Every rich-text layout attempt (a <table>; a table-free <div>/<span>
+  // side-by-side layout) still arrived in the reader's target app (Word,
+  // Apple Notes, Apple Pages) as an editable table cell/box - apparently
+  // any side-by-side block arrangement, not just an actual <table>, gets
+  // "upgraded" into one on paste. A single real tab character cannot be:
+  // it is just text. Every label is padded to the same character count
+  // first (longest is 26) so the tab after it lands on the same following
+  // tab stop for every line even though Arial is proportional - padding
+  // to equal length by itself would not align (space width differs from
+  // letter width), but it keeps each line's tab starting close enough to
+  // the same position that they land on the same next stop.
+  const padTo = (label: string, width: number) => label.padEnd(width, " ");
+  const LABEL_WIDTH = 30;
+  const lines = [
+    ...rows.map(([label, value]) => `${padTo(label, LABEL_WIDTH)}\t${value}`),
     "",
     b.conclusion,
-  ].join("\n");
-  void navigator.clipboard
-    .writeText(text)
-    .then(() => notice(t("befund.copied")))
-    .catch(() => error(t("befund.copyFailed")));
+  ];
+  const text = lines.join("\n");
+  const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
+  // One block of preformatted text, not a row of boxes - nothing here for
+  // a paste handler to read as tabular structure.
+  const html =
+    `<div style="${font} white-space:pre-wrap;">` +
+    lines
+      .map((line) =>
+        line
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;"),
+      )
+      .join("\n") +
+    `</div>`;
+  void (async () => {
+    try {
+      if (typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([text], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
+      notice(t("befund.copied"));
+    } catch {
+      error(t("befund.copyFailed"));
+    }
+  })();
 });
 el("reset").addEventListener("click", () => {
   ++fileGeneration;
