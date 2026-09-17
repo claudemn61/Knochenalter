@@ -3,7 +3,11 @@ import UTIF from "utif";
 import type { GrayImage } from "./types";
 import { t } from "./i18n";
 
-const MAX_PIXELS = 24_000_000;
+// Generous enough for a phone photo of a printed/screen-displayed X-ray at
+// full camera resolution (up to ~80 MP, comfortably above the 48-64 MP
+// modern phone cameras commonly produce) while still rejecting clearly
+// malformed dimensions.
+const MAX_PIXELS = 80_000_000;
 function dimensions(width: number, height: number) {
   if (
     !Number.isInteger(width) ||
@@ -350,7 +354,12 @@ export async function decodeFile(file: File): Promise<GrayImage> {
       ...(await decodeBitmap(file)),
       format: file.name.split(".").pop()!.toUpperCase(),
     };
-  } catch {
+  } catch (cause) {
+    // A specific, already-translated reason (e.g. "too many pixels") is
+    // more useful than the generic message replacing it; only unknown
+    // failures (the browser's own decoder rejecting the bytes) fall back to it.
+    if (cause instanceof Error && cause.message === t("decode.badSize"))
+      throw cause;
     throw new Error(`${t("decode.failed")} ${diagnostics(file, bytes)}`);
   }
 }

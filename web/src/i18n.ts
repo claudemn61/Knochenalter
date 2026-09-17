@@ -201,7 +201,7 @@ const de = {
   "decode.truncated": "Unvollständige DICOM-Daten.",
   "decode.tiffEmpty": "TIFF ohne Bild.",
   "processing.emptyHistogram": "Leeres Histogramm.",
-  "decode.badSize": "Ungültige Abmessungen oder Bild grösser als 24 Megapixel.",
+  "decode.badSize": "Ungültige Abmessungen oder Bild grösser als 80 Megapixel.",
   "decode.dicomUnreadable":
     "Das DICOM konnte nicht gelesen werden. Bitte eine Original-DICOM-Part-10-Datei, PNG oder TIFF verwenden.",
   "decode.dicomMultiframe":
