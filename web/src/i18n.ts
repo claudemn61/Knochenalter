@@ -132,7 +132,7 @@ const de = {
   "height.cmValueTemplate": "{cm} cm",
   "height.percentValueTemplate": "{percent} %",
   "height.outOfRange":
-    "Für dieses Skelettalter liegt keine passende Bayley-Pinneau-Referenztabelle vor (die Tabellen decken je nach Reifungstyp und Geschlecht ungefähr 1 bis 17–18 Jahre Skelettalter ab). Bei retardierten Jungen deckt die verfügbare Tabelle zusätzlich nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
+    "Für dieses Skelettalter liegt keine passende Bayley-Pinneau-Referenztabelle vor (die Tabellen decken je nach Reifungstyp und Geschlecht ungefähr 6 bis 17–18 Jahre Skelettalter ab). Bei retardierten Jungen deckt die verfügbare Tabelle zusätzlich nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
   "height.citation":
     "Nach Bayley N, Pinneau SR. Tables for Predicting Adult Height from Skeletal Age. J Pediatr. 1952;40(4):423–441 (Tables IIA–IIE Jungen, IIIA–IIIF Mädchen). Experimentelle Schätzung, keine individuelle Zusicherung — abhängig u. a. von Ernährung, Erkrankungen und familiärer Grösse.",
 
