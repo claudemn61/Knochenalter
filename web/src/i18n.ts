@@ -85,7 +85,7 @@ const de = {
   "result.estimated": "Geschätztes Knochenalter",
   "result.ensembleCaption": "Mittelwert der drei Netzwerke",
   "result.chrono": "Chronologisches Alter",
-  "result.stddev": "Standardabweichung (Greulich-Pyle)",
+  "result.stddev": "SD (Greulich-Pyle)",
   "result.noChrono": "Nicht angegeben",
   "result.notComputed": "nicht berechnet",
   "result.monthsValue": "{months} Monate",
@@ -93,7 +93,7 @@ const de = {
   "befund.heading": "Befund",
   "befund.boneAgeLabel": "Biologisches Knochenalter:",
   "befund.chronoLabel": "Chronologisches Alter:",
-  "befund.stddevLabel": "Standardabweichung (Greulich-Pyle):",
+  "befund.stddevLabel": "SD (Greulich-Pyle):",
   "befund.upperLabel": "Obere Grenze (+2 SD):",
   "befund.lowerLabel": "Untere Grenze (-2 SD):",
   "befund.ageValueTemplate": "{years} Jahre {months} Monate",
@@ -195,6 +195,8 @@ const de = {
   "worker.badOutput": "Das Netzwerk hat ein ungültiges Ergebnis geliefert.",
   "worker.failed":
     "Das Modell konnte nicht ausgeführt werden. Möglicherweise ist der Arbeitsspeicher des Browsers voll. Andere Tabs schliessen und erneut versuchen.",
+  "decode.heicFailed":
+    "Das HEIC-Bild konnte nicht konvertiert werden. Bitte ein anderes Format verwenden oder das Bild vorher in JPEG umwandeln.",
   "decode.noPixels": "DICOM ohne Bilddaten.",
   "decode.truncated": "Unvollständige DICOM-Daten.",
   "decode.tiffEmpty": "TIFF ohne Bild.",
@@ -221,7 +223,7 @@ const de = {
   "decode.tiffPages":
     "Mehrseitiges TIFF: Bitte nur das gewünschte Röntgenbild exportieren.",
   "decode.unknownFormat":
-    "Format nicht erkannt. Bitte DICOM, PNG, JPEG, TIFF, WebP, BMP oder AVIF verwenden.",
+    "Format nicht erkannt. Bitte DICOM, PNG, JPEG, TIFF, HEIC, WebP, BMP oder AVIF verwenden.",
   "decode.failed":
     "Das Bild konnte nicht dekodiert werden. Format und Grösse prüfen.",
 

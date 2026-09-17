@@ -467,23 +467,60 @@ function reportLabels(): ReportLabels {
     heightCitation: t("height.citation"),
   };
 }
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 el("befund-copy").addEventListener("click", () => {
   const b = currentBefund();
   if (!b || b.outOfRange) return;
+  const rows: [string, string][] = [
+    [b.boneAgeLabel, b.boneAgeValue],
+    [b.chronoLabel, b.chronoValue],
+    [b.stdDevLabel, b.stdDevValue],
+    [b.upperLabel, b.upperValue],
+    [b.lowerLabel, b.lowerValue],
+  ];
+  // Plain-text fallback (monospace targets: Notepad, terminals, code
+  // editors) keeps padding-based alignment; it cannot align in a
+  // proportional font, which is what the HTML table below is for.
   const pad = (label: string) => label.padEnd(30, " ");
-  const text = [
-    `${pad(b.boneAgeLabel)}${b.boneAgeValue}`,
-    `${pad(b.chronoLabel)}${b.chronoValue}`,
-    `${pad(b.stdDevLabel)}${b.stdDevValue}`,
-    `${pad(b.upperLabel)}${b.upperValue}`,
-    `${pad(b.lowerLabel)}${b.lowerValue}`,
+  const plain = [
+    ...rows.map(([label, value]) => `${pad(label)}${value}`),
     "",
     b.conclusion,
   ].join("\n");
-  void navigator.clipboard
-    .writeText(text)
-    .then(() => notice(t("befund.copied")))
-    .catch(() => error(t("befund.copyFailed")));
+  // Rich-text target (Word, Mail, browsers): a real table so the years/
+  // months values line up strictly left-aligned under one another
+  // regardless of label length, set in Arial 9.5pt throughout.
+  const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
+  const cell = (text: string, padRight: string) =>
+    `<td style="text-align:left; white-space:nowrap; padding:0 ${padRight} 4px 0; ${font}">${escapeHtml(text)}</td>`;
+  const html =
+    `<div style="${font}">` +
+    `<table style="border-collapse:collapse; ${font}" cellpadding="0" cellspacing="0"><tbody>` +
+    rows
+      .map(([label, value]) => `<tr>${cell(label, "24px")}${cell(value, "0")}</tr>`)
+      .join("") +
+    `</tbody></table>` +
+    `<p style="margin:12px 0 0; ${font}">${escapeHtml(b.conclusion)}</p>` +
+    `</div>`;
+  void (async () => {
+    try {
+      if (typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([plain], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(plain);
+      }
+      notice(t("befund.copied"));
+    } catch {
+      error(t("befund.copyFailed"));
+    }
+  })();
 });
 el("reset").addEventListener("click", () => {
   ++fileGeneration;

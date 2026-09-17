@@ -74,6 +74,32 @@ it("inverts MONOCHROME1 and rejects unsupported compression explicitly", async (
     decodeFile(dicom("MONOCHROME2", "1.2.840.10008.1.2.4.90")),
   ).rejects.toThrow("Nicht unterstützte DICOM-Kompression");
 });
+it("routes HEIC files past the unknown-format rejection, by extension and by ftyp brand", async () => {
+  // Not real HEIC pixel data - just enough to prove decodeFile() recognises
+  // and routes the format, rather than falling through to "Format nicht
+  // erkannt". The actual conversion (heic2any/libheif, WASM) needs browser
+  // canvas/image APIs this Node test environment does not provide, so it
+  // fails past that point - with the dedicated HEIC error, not the generic one.
+  const byExtension = new File([new Uint8Array(20)], "photo.heic");
+  await expect(decodeFile(byExtension)).rejects.toThrow(
+    "HEIC-Bild konnte nicht konvertiert werden",
+  );
+
+  const bytes = new Uint8Array(20);
+  bytes.set(new TextEncoder().encode("ftyp"), 4);
+  bytes.set(new TextEncoder().encode("heic"), 8);
+  const byBrand = new File([bytes], "no-extension-attachment");
+  await expect(decodeFile(byBrand)).rejects.toThrow(
+    "HEIC-Bild konnte nicht konvertiert werden",
+  );
+});
+it("still rejects genuinely unrecognised formats", async () => {
+  const mystery = new File(
+    [new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])],
+    "mystery.bin",
+  );
+  await expect(decodeFile(mystery)).rejects.toThrow("Format nicht erkannt");
+});
 it("decodes a single-page TIFF locally", async () => {
   const rgba = new Uint8Array(32 * 32 * 4);
   for (let i = 0; i < 1024; i++) {

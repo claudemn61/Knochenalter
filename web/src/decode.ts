@@ -214,6 +214,51 @@ async function decodeDicom(bytes: Uint8Array): Promise<GrayImage> {
   return { pixels, width, height, format: "DICOM", ...metadata };
 }
 
+// HEIC/HEIF: an ISO base media ("ftyp" box) container, the format iPhones
+// save photos in by default. Neither Chrome nor Firefox can decode it
+// natively, so a converted-first-to-JPEG fallback (via heic2any/libheif,
+// WASM) feeds the same decodeBitmap() path used for JPEG/PNG/etc.
+function isHeic(bytes: Uint8Array, file: File): boolean {
+  if (/\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]$/.test(file.type))
+    return true;
+  if (bytes.length < 12) return false;
+  if (String.fromCharCode(...bytes.subarray(4, 8)) !== "ftyp") return false;
+  const brand = String.fromCharCode(...bytes.subarray(8, 12));
+  return [
+    "heic",
+    "heix",
+    "hevc",
+    "heim",
+    "heis",
+    "hevm",
+    "hevs",
+    "mif1",
+    "msf1",
+  ].includes(brand);
+}
+
+async function decodeHeic(file: File): Promise<GrayImage> {
+  let converted: Blob;
+  try {
+    // Lazy-loaded: its WASM decoder is inlined and adds well over 1 MB, cost
+    // only HEIC imports should pay, not every page load.
+    const { default: heic2any } = await import("heic2any");
+    const result = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.92,
+    });
+    converted = Array.isArray(result) ? result[0] : result;
+  } catch {
+    throw new Error(t("decode.heicFailed"));
+  }
+  try {
+    return { ...(await decodeBitmap(converted)), format: "HEIC" };
+  } catch {
+    throw new Error(t("decode.failed"));
+  }
+}
+
 export async function decodeFile(file: File): Promise<GrayImage> {
   if (file.size > 100 * 1024 * 1024)
     throw new Error(t("decode.tooLarge"));
@@ -224,6 +269,7 @@ export async function decodeFile(file: File): Promise<GrayImage> {
     bytes.length > 132 &&
     String.fromCharCode(...bytes.subarray(128, 132)) === "DICM";
   if (isDicom || /\.dcm$/i.test(file.name)) return decodeDicom(bytes);
+  if (isHeic(bytes, file)) return decodeHeic(file);
   const isTiff =
     (bytes[0] === 73 && bytes[1] === 73 && bytes[2] === 42) ||
     (bytes[0] === 77 && bytes[1] === 77 && bytes[3] === 42);
