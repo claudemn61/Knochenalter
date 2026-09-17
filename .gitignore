@@ -1,0 +1,19 @@
+.DS_Store
+node_modules/
+web/dist/
+web/public/models/
+*.onnx
+*.onnx.data
+test-results/
+playwright-report/
+
+# Röntgenbilder für manuelles Testen (echte Aufnahmen!) — nie versehentlich
+# committen. App-eigene Icons und das mitgelieferte Demo-Bild sind erlaubt.
+/*.png
+/*.jpg
+/*.jpeg
+/*.tif
+/*.tiff
+/*.dcm
+/local/
+!/example.tif
