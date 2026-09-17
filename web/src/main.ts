@@ -491,13 +491,17 @@ el("befund-copy").addEventListener("click", () => {
   ].join("\n");
   // Rich-text target (Word, Mail, browsers): a real table so the years/
   // months values line up strictly left-aligned under one another
-  // regardless of label length, set in Arial 9.5pt throughout.
+  // regardless of label length, set in Arial 9.5pt throughout. Word and
+  // most mail clients draw a visible grid on any pasted <table> unless
+  // told not to on both the table and every cell - the border="0"
+  // attribute is for old Word/Outlook builds that ignore the CSS.
   const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
+  const noBorder = "border:none; border-style:none; border-width:0;";
   const cell = (text: string, padRight: string) =>
-    `<td style="text-align:left; white-space:nowrap; padding:0 ${padRight} 4px 0; ${font}">${escapeHtml(text)}</td>`;
+    `<td style="text-align:left; white-space:nowrap; padding:0 ${padRight} 4px 0; ${noBorder} ${font}">${escapeHtml(text)}</td>`;
   const html =
     `<div style="${font}">` +
-    `<table style="border-collapse:collapse; ${font}" cellpadding="0" cellspacing="0"><tbody>` +
+    `<table border="0" style="border-collapse:collapse; ${noBorder} ${font}" cellpadding="0" cellspacing="0"><tbody>` +
     rows
       .map(([label, value]) => `<tr>${cell(label, "24px")}${cell(value, "0")}</tr>`)
       .join("") +
