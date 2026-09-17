@@ -264,6 +264,12 @@
             <label class="field-label" for="exam-date" data-i18n="form.examDate"
               >Untersuchungsdatum</label
             ><input id="exam-date" type="date" required />
+            <label class="field-label" for="height-cm" data-i18n-html="form.heightCm"
+              >Aktuelle Körpergrösse <span>optional, cm</span></label
+            ><input id="height-cm" type="number" min="30" max="250" step="0.1" />
+            <p class="field-help" data-i18n="form.heightCmHelp">
+              Für eine Endgrössen-Prognose nach Bayley-Pinneau (aktuell nur für Jungen verfügbar).
+            </p>
             <div class="chrono-line">
               <span data-i18n="form.chrono">Alter am Untersuchungsdatum</span
               ><strong id="chrono">—</strong>
@@ -451,6 +457,14 @@
           <dl id="befund-fields" class="report-fields"></dl>
           <p id="befund-conclusion" class="befund-conclusion"></p>
           <p id="befund-citation" class="result-note"></p>
+        </section>
+        <section id="height-section" class="report-section befund-section" aria-labelledby="height-title" hidden>
+          <div class="befund-heading">
+            <h3 id="height-title" data-i18n="height.heading">Endgrössen-Prognose (Bayley-Pinneau)</h3>
+          </div>
+          <dl id="height-fields" class="report-fields"></dl>
+          <p id="height-message" class="befund-conclusion"></p>
+          <p id="height-citation" class="result-note"></p>
         </section>
         <section id="professional-comparison" class="report-section professional-comparison" aria-labelledby="professional-comparison-title" hidden>
           <h3 id="professional-comparison-title" data-i18n="professional.heading">Vergleich mit eingetragener fachärztlicher Beurteilung</h3>

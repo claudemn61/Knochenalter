@@ -38,5 +38,7 @@ export interface Result {
   sex: "male" | "female";
   dob: string;
   examDate: string;
+  /** Current height in cm, for the Bayley-Pinneau height prediction; empty if not entered. */
+  heightCm: string;
   professional?: ProfessionalAssessment;
 }

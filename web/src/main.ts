@@ -29,6 +29,7 @@ const fileInput = el<HTMLInputElement>("file-input");
 const sex = el<HTMLSelectElement>("sex");
 const dob = el<HTMLInputElement>("dob");
 const exam = el<HTMLInputElement>("exam-date");
+const heightCm = el<HTMLInputElement>("height-cm");
 const confirmed = el<HTMLInputElement>("confirm-hand");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
@@ -199,10 +200,11 @@ async function openFile(file: File) {
     if (generation !== fileGeneration) return;
     image = decoded;
     filename = file.name;
-    const entered = sex.value || dob.value;
+    const entered = sex.value || dob.value || heightCm.value;
     sex.value = image.sex || "";
     dob.value = image.dob || "";
     exam.value = image.examDate || today();
+    heightCm.value = "";
     showImage();
     if (image.sex || image.dob || image.examDate) notice(t("msg.dicomFilled"));
     else if (entered) notice(t("msg.fieldsCleared"));
@@ -318,7 +320,7 @@ el("full-crop").addEventListener("click", () => {
     syncCrop();
   }
 });
-for (const input of [sex, dob, exam, confirmed])
+for (const input of [sex, dob, exam, heightCm, confirmed])
   input.addEventListener("input", () => {
     invalidateResult();
     refresh();
@@ -394,6 +396,7 @@ function run(mode: "prepare" | "infer") {
         sex: sex.value as "male" | "female",
         dob: dob.value,
         examDate: exam.value,
+        heightCm: heightCm.value,
       };
       finishWorker();
       showResult(result!, true);
@@ -532,6 +535,7 @@ function reportInput(r: Result, radiograph: HTMLCanvasElement): ReportInput {
     dateOfBirth: r.dob,
     examinationDate: r.examDate,
     chronologicalMonths: chrono,
+    heightCm: r.heightCm ? Number(r.heightCm) : undefined,
     crop: { ...r.crop },
     fileName: filename,
     locale: t("app.locale"),
@@ -625,6 +629,19 @@ function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
     befundNormal: t("befund.normal"),
     befundOutOfRange: t("befund.outOfRange"),
     befundCitation: t("befund.citation"),
+    heightHeading: t("height.heading"),
+    heightCurrentLabel: t("height.currentLabel"),
+    heightCategoryLabel: t("height.categoryLabel"),
+    heightCategoryAverage: t("height.categoryAverage"),
+    heightCategoryAccelerated: t("height.categoryAccelerated"),
+    heightCategoryRetarded: t("height.categoryRetarded"),
+    heightPmhLabel: t("height.pmhLabel"),
+    heightPredictedLabel: t("height.predictedLabel"),
+    heightCmValueTemplate: t("height.cmValueTemplate"),
+    heightPercentValueTemplate: t("height.percentValueTemplate"),
+    heightOutOfRange: t("height.outOfRange"),
+    heightFemaleUnsupported: t("height.femaleUnsupported"),
+    heightCitation: t("height.citation"),
   };
 }
 el("professional-form").addEventListener("submit", (event) => {
@@ -716,7 +733,7 @@ el("reset").addEventListener("click", () => {
   filename = "";
   dragging = undefined;
   source.width = source.height = canvas.width = canvas.height = 0;
-  sex.value = dob.value = fileInput.value = "";
+  sex.value = dob.value = fileInput.value = heightCm.value = "";
   exam.value = today();
   confirmed.checked = false;
   el("viewer").hidden = true;

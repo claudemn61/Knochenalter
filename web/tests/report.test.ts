@@ -201,6 +201,19 @@ const labels: ReportLabels = {
   befundNormal: "dentro de 2 desvios-padrão da idade cronológica, compatível com achado normal.",
   befundOutOfRange: "Fora da faixa etária da tabela de referência.",
   befundCitation: "Greulich & Pyle, 1959, Tabelas V/VI.",
+  heightHeading: "Previsão de estatura adulta (Bayley-Pinneau)",
+  heightCurrentLabel: "Estatura atual:",
+  heightCategoryLabel: "Tipo de maturação:",
+  heightCategoryAverage: "maturação média",
+  heightCategoryAccelerated: "maturação acelerada",
+  heightCategoryRetarded: "maturação retardada",
+  heightPmhLabel: "Percentual da estatura adulta atingido:",
+  heightPredictedLabel: "Estatura adulta prevista:",
+  heightCmValueTemplate: "{cm} cm",
+  heightPercentValueTemplate: "{percent} %",
+  heightOutOfRange: "Fora da faixa etária da tabela de referência.",
+  heightFemaleUnsupported: "Ainda não disponível para meninas.",
+  heightCitation: "Bayley & Pinneau, 1952, Tabelas IIA–IIE.",
   runtimeLabel: "Tempo de execução",
   cropLabel: "Recorte [x0, y0, x1, y1]",
   modelLabel: "Modelo",
@@ -499,6 +512,83 @@ describe("Standard-Befund (Greulich-Pyle)", () => {
     expect(
       presentReport(input({ chronologicalMonths: undefined })).befund,
     ).toBeUndefined();
+  });
+});
+
+describe("Endgrössen-Prognose (Bayley-Pinneau)", () => {
+  it("converts cm to inches, predicts, and converts back (book example: 13y, SA 13-3, 60in)", () => {
+    const p = presentReport(
+      input({
+        sex: "male",
+        months: 159, // skeletal age 13-3
+        chronologicalMonths: 156, // 13-0
+        heightCm: 60 * 2.54, // 152.4 cm
+      }),
+    );
+    const h = p.heightPrediction;
+    if (!h || h.state !== "ok") throw new Error("expected an ok prediction");
+    expect(h.currentValue).toBe("152,4 cm");
+    expect(h.categoryValue).toBe(labels.heightCategoryAverage);
+    expect(h.pmhValue).toBe("89,0 %");
+    // 60/0.89 = 67.4157... inches = 171.236 cm -> 171.2
+    expect(h.predictedValue).toBe("171,2 cm");
+  });
+
+  it("reports out of range for retarded boys past 13 years skeletal age", () => {
+    const h = presentReport(
+      input({
+        sex: "male",
+        months: 168, // 14-0
+        chronologicalMonths: 186, // 15-6, 18 months ahead -> retarded
+        heightCm: 150,
+      }),
+    ).heightPrediction;
+    expect(h).toEqual({
+      state: "outOfRange",
+      heading: labels.heightHeading,
+      message: labels.heightOutOfRange,
+    });
+  });
+
+  it("reports unsupported for girls, without attempting a table lookup", () => {
+    const h = presentReport(
+      input({ sex: "female", chronologicalMonths: 133.6, heightCm: 150 }),
+    ).heightPrediction;
+    expect(h).toEqual({
+      state: "unsupported",
+      heading: labels.heightHeading,
+      message: labels.heightFemaleUnsupported,
+    });
+  });
+
+  it("is undefined without a height or without a chronological age", () => {
+    expect(presentReport(input({ sex: "male" })).heightPrediction).toBeUndefined();
+    expect(
+      presentReport(
+        input({ sex: "male", heightCm: 150, chronologicalMonths: undefined }),
+      ).heightPrediction,
+    ).toBeUndefined();
+  });
+
+  it("is printed in the PDF, and omitted without a height", () => {
+    const text = latin1(
+      buildReportPdf(
+        input({
+          sex: "male",
+          months: 159,
+          chronologicalMonths: 156,
+          heightCm: 152.4,
+        }),
+      ),
+    );
+    // The heading contains literal parentheses, which the PDF writer
+    // backslash-escapes in the content stream (valid PDF string syntax);
+    // search for a paren-free substring instead of the whole heading.
+    expect(text).toContain(encodeWinAnsi("Bayley-Pinneau"));
+    expect(text).toContain(encodeWinAnsi(labels.heightPredictedLabel));
+    expect(text).toContain(encodeWinAnsi(labels.heightCitation));
+    const withoutHeight = latin1(buildReportPdf(input({ sex: "male" })));
+    expect(withoutHeight).not.toContain(encodeWinAnsi("Bayley-Pinneau"));
   });
 });
 

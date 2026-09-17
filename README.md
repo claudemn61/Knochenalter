@@ -40,6 +40,23 @@ Apache-2.0 lizenziert. Details und Lizenztexte: `web/public/model-license.txt`,
   dieses persönliche Projekt stand in keinem Verhältnis. Die Unit-Tests
   (`web/tests/*.test.ts`, u. a. Bildverarbeitung, PDF-Erzeugung, QR-Code,
   i18n-Vollständigkeit) sind unverändert vorhanden und laufen mit `npm test`.
+- **Standard-Befund** nach Greulich-Pyle-Systematik ergänzt: Knochenalter
+  wird gegen chronologisches Alter ± 2 Standardabweichungen klassifiziert
+  (Retardierung/Beschleunigung/Normbefund), mit der **echten publizierten
+  SD-Tabelle** (Greulich & Pyle 1959, Table V/VI, alters-/geschlechts-
+  spezifisch) statt der Ensemble-Streuung — siehe `web/src/greulich-pyle-sd.ts`.
+  Die Ensemble-Streuung bleibt separat als technische Kennzahl sichtbar.
+- **Endgrössen-Prognose nach Bayley-Pinneau** (1952) ergänzt: aus aktueller
+  Grösse, Skelett- und chronologischem Alter — siehe
+  `web/src/bayley-pinneau.ts`. **Aktuell nur für Jungen**, Mädchen-Tabellen
+  (III A–F) sind noch nicht transkribiert. Bei Jungen mit retardierter
+  Reifung (Skelettalter ≥ 1 Jahr unter dem chronologischen Alter) deckt
+  die Quelle nur bis 13 Jahre Skelettalter ab (Table IIE) — die
+  Fortsetzungstabelle (Table IIF) aus dem Original-Artikel (Bayley N,
+  Pinneau SR. *J Pediatr.* 1952;40(4):423–441) war nicht zugänglich
+  (Bezahlschranke, keine freie Reproduktion gefunden) und wird **nicht
+  extrapoliert** — die App zeigt in diesem Fall einen klaren
+  "ausserhalb der Tabelle"-Hinweis statt einer Schätzung.
 
 ## Entwicklung
 

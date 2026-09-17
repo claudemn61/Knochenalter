@@ -144,6 +144,27 @@ const de = {
   "befund.copyFailed":
     "Kopieren nicht möglich. Bitte den Text manuell auswählen und kopieren.",
 
+  "form.heightCm": "Aktuelle Körpergrösse <span>optional, cm</span>",
+  "form.heightCmHelp":
+    "Für eine Endgrössen-Prognose nach Bayley-Pinneau (aktuell nur für Jungen verfügbar).",
+
+  "height.heading": "Endgrössen-Prognose (Bayley-Pinneau)",
+  "height.currentLabel": "Aktuelle Körpergrösse:",
+  "height.categoryLabel": "Reifungstyp:",
+  "height.categoryAverage": "durchschnittlich reifend",
+  "height.categoryAccelerated": "vorauseilend reifend",
+  "height.categoryRetarded": "retardiert reifend",
+  "height.pmhLabel": "Erreichter Anteil der Erwachsenengrösse:",
+  "height.predictedLabel": "Voraussichtliche Endgrösse:",
+  "height.cmValueTemplate": "{cm} cm",
+  "height.percentValueTemplate": "{percent} %",
+  "height.outOfRange":
+    "Für dieses Skelettalter liegt keine Bayley-Pinneau-Referenztabelle vor. Bei retardierter Reifung (Skelettalter ≥ 1 Jahr unter dem chronologischen Alter) deckt die verfügbare Tabelle nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
+  "height.femaleUnsupported":
+    "Endgrössen-Prognose aktuell nur für Jungen verfügbar.",
+  "height.citation":
+    "Nach Bayley N, Pinneau SR. Tables for Predicting Adult Height from Skeletal Age. J Pediatr. 1952;40(4):423–441 (Tables IIA–IIE, Jungen). Experimentelle Schätzung, keine individuelle Zusicherung — abhängig u. a. von Ernährung, Erkrankungen und familiärer Grösse.",
+
   "review.open": "Vergrössern und prüfen",
   "review.title": "Bild prüfen",
   "review.close": "Schliessen",

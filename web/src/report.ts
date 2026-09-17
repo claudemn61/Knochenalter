@@ -201,6 +201,23 @@ export interface ReportLabels {
   befundOutOfRange: string;
   /** Source citation for the Greulich-Pyle standard deviation table. */
   befundCitation: string;
+
+  /** Bayley-Pinneau adult height prediction block: static labels. */
+  heightHeading: string;
+  heightCurrentLabel: string;
+  heightCategoryLabel: string;
+  heightCategoryAverage: string;
+  heightCategoryAccelerated: string;
+  heightCategoryRetarded: string;
+  heightPmhLabel: string;
+  heightPredictedLabel: string;
+  /** A height value. Template: {cm}. */
+  heightCmValueTemplate: string;
+  /** A percentage value. Template: {percent}. */
+  heightPercentValueTemplate: string;
+  heightOutOfRange: string;
+  heightFemaleUnsupported: string;
+  heightCitation: string;
 }
 
 export interface ReportInput {
@@ -223,6 +240,8 @@ export interface ReportInput {
   examinationDate: string;
   /** Chronological age in months, or undefined when no date of birth. */
   chronologicalMonths?: number;
+  /** Current height in cm, for the Bayley-Pinneau prediction; undefined when not entered. */
+  heightCm?: number;
   /** Crop applied to the oriented image. */
   crop: ReportCrop;
   /** Name of the file the operator opened. */
@@ -1551,6 +1570,54 @@ export function buildReportPdf(input: ReportInput): Uint8Array<ArrayBuffer> {
       doc.y -= 14;
       paintStack(doc, conclusionStack, MARGIN_X, doc.y);
       doc.y -= conclusionStack.height;
+    }
+  }
+
+  /* -- Endgrössen-Prognose (Bayley-Pinneau) ------------------------------- */
+
+  if (presentation.heightPrediction) {
+    const h = presentation.heightPrediction;
+    doc.y -= 4;
+    sectionHeading(doc, h.heading);
+    if (h.state !== "ok") {
+      const messageStack = layoutStack(
+        [
+          {
+            text: h.message,
+            style: { bold: false, size: 9, color: INK, leading: 13 },
+            gapBefore: 0,
+          },
+        ],
+        COLUMN,
+      );
+      ensure(doc, messageStack.height + 4);
+      paintStack(doc, messageStack, MARGIN_X, doc.y);
+      doc.y -= messageStack.height + 10;
+    } else {
+      fieldGrid(
+        doc,
+        [
+          { label: h.currentLabel, value: h.currentValue },
+          { label: h.categoryLabel, value: h.categoryValue },
+          { label: h.pmhLabel, value: h.pmhValue },
+          { label: h.predictedLabel, value: h.predictedValue },
+        ],
+        2,
+      );
+      const citationStack = layoutStack(
+        [
+          {
+            text: h.citation,
+            style: { bold: false, size: 7, color: MUTED, leading: 10 },
+            gapBefore: 0,
+          },
+        ],
+        COLUMN,
+      );
+      ensure(doc, citationStack.height + 14);
+      doc.y -= 14;
+      paintStack(doc, citationStack, MARGIN_X, doc.y);
+      doc.y -= citationStack.height;
     }
   }
 
