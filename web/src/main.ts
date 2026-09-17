@@ -6,22 +6,10 @@ import {
   validateCrop,
 } from "./processing";
 import type { Crop, GrayImage, Result } from "./types";
-import { buildReportPdf, type ReportInput, type ReportLabels } from "./report";
+import type { ReportInput, ReportLabels } from "./report-presentation";
 import { currentBefund, renderReport } from "./report-view";
 import { createImageReview } from "./image-review";
-import { readProfessionalAssessment } from "./professional";
-import {
-  detectLang,
-  LANG_STORAGE,
-  LANGUAGES,
-  lang,
-  setLang,
-  t,
-  type Key,
-  type Lang,
-} from "./i18n";
-
-setLang(detectLang());
+import { t, type Key } from "./i18n";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -56,8 +44,7 @@ const imageReview = createImageReview(() => {
   if (!image || busy || !validateCrop(crop, image.width, image.height)) return undefined;
   return { source, crop };
 });
-for (const id of ["review-image", "review-result-image"])
-  el(id).addEventListener("click", () => imageReview.open());
+el("review-image").addEventListener("click", () => imageReview.open());
 const ageText = (months: number) => {
   const rounded = Math.round(months),
     years = Math.floor(rounded / 12),
@@ -69,11 +56,6 @@ const ageText = (months: number) => {
     monthWord: t(m === 1 ? "age.month" : "age.monthPlural"),
   });
 };
-const localDate = (s: string) => {
-  const [year, month, day] = s.split("-");
-  return t("date.format", { year, month, day });
-};
-
 function error(message: string) {
   el("error").textContent = message;
   el("error").hidden = false;
@@ -90,12 +72,7 @@ function status(key: Key) {
 function invalidateResult() {
   imageReview.close();
   result = undefined;
-  el<HTMLFormElement>("professional-form").reset();
-  el<HTMLDetailsElement>("professional-entry").open = false;
-  el("professional-error").hidden = true;
-  el("professional-remove").hidden = true;
   el("result").hidden = true;
-  el("step-3").classList.remove("active");
 }
 function refresh() {
   let validDates = true;
@@ -128,7 +105,6 @@ function setBusy(value: boolean) {
     "rotate",
     "full-crop",
     "replace",
-    "demo",
     "review-image",
   ])
     el<HTMLButtonElement>(id).disabled = value;
@@ -181,7 +157,6 @@ function showImage() {
   el("image-format").textContent = image.format;
   el("file-info").textContent =
     `${filename} · ${image.width} × ${image.height}`;
-  el("step-2").classList.add("active");
 }
 async function openFile(file: File) {
   if (busy) return;
@@ -392,7 +367,6 @@ function run(mode: "prepare" | "infer") {
     } else if (data.type === "result") {
       result = {
         ...data,
-        crop: { ...crop },
         sex: sex.value as "male" | "female",
         dob: dob.value,
         examDate: exam.value,
@@ -406,52 +380,12 @@ function run(mode: "prepare" | "infer") {
   worker.postMessage({
     base,
     weightsBase,
-    lang: lang(),
     mode,
     image: mode === "infer" ? image : undefined,
     crop,
     sex: sex.value,
   });
 }
-// The sample radiograph documented for the CLI, with its examination data, for
-// anyone who wants to see the whole pipeline without a radiograph of their own.
-const DEMO = {
-  path: "demo/example.tif",
-  name: "example.tif",
-  type: "image/tiff",
-  sex: "female",
-  dob: "2023-07-17",
-  examDate: "2026-05-16",
-};
-el("demo").addEventListener("click", () => {
-  if (busy) return;
-  void (async () => {
-    let file: File;
-    try {
-      const response = await fetch(new URL(DEMO.path, base));
-      if (!response.ok) throw new Error(String(response.status));
-      file = new File([await response.blob()], DEMO.name, { type: DEMO.type });
-    } catch {
-      error(t("msg.demoFailed"));
-      return;
-    }
-    await openFile(file);
-    if (!image) return;
-    sex.value = DEMO.sex;
-    dob.value = DEMO.dob;
-    exam.value = DEMO.examDate;
-    confirmed.checked = true;
-    refresh();
-    // run() clears the message area, so the explanation goes after it.
-    run("infer");
-    notice(
-      t("msg.demoLoaded", {
-        dob: localDate(DEMO.dob),
-        exam: localDate(DEMO.examDate),
-      }),
-    );
-  })();
-});
 el("prepare").addEventListener("click", () => run("prepare"));
 el("analysis-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -486,136 +420,37 @@ const resultChrono = (r: Result) => {
   }
 };
 function showResult(r: Result, scroll = false) {
-  const radiograph = analysedCanvas(r);
-  if (!radiograph) return;
-  renderReport(reportInput(r, radiograph), radiograph);
-  el("professional-remove").hidden = !r.professional;
-  const professionalDate = el<HTMLInputElement>("professional-date");
-  professionalDate.min = r.examDate;
-  professionalDate.max = today();
+  renderReport(reportInput(r));
   el("result").hidden = false;
-  el("step-3").classList.add("active");
   if (scroll)
     el("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
-// Shared screen/PDF preview: oriented crop before histogram matching/resizing.
-const REPORT_IMAGE_MAX = 1400;
-function analysedCanvas(r: Result): HTMLCanvasElement | undefined {
-  const width = r.crop.x1 - r.crop.x0,
-    height = r.crop.y1 - r.crop.y0;
-  if (!source.width || width < 1 || height < 1) return undefined;
-  const scale = Math.min(1, REPORT_IMAGE_MAX / Math.max(width, height));
-  const out = document.createElement("canvas");
-  out.width = Math.max(1, Math.round(width * scale));
-  out.height = Math.max(1, Math.round(height * scale));
-  const context = out.getContext("2d");
-  if (!context) return undefined;
-  context.drawImage(
-    source,
-    r.crop.x0,
-    r.crop.y0,
-    width,
-    height,
-    0,
-    0,
-    out.width,
-    out.height,
-  );
-  return out;
-}
-function reportInput(r: Result, radiograph: HTMLCanvasElement): ReportInput {
+function reportInput(r: Result): ReportInput {
   const chrono = resultChrono(r);
   return {
     months: r.months,
     folds: [...r.folds],
-    seconds: r.seconds,
-    modelId: r.model,
-    modelRevision: r.revision,
     sex: r.sex,
-    dateOfBirth: r.dob,
-    examinationDate: r.examDate,
     chronologicalMonths: chrono,
     heightCm: r.heightCm ? Number(r.heightCm) : undefined,
-    crop: { ...r.crop },
-    fileName: filename,
     locale: t("app.locale"),
-    image: {
-      jpeg: new Uint8Array(),
-      width: radiograph.width,
-      height: radiograph.height,
-    },
     labels: reportLabels(r, chrono),
-    professional: r.professional ? { ...r.professional } : undefined,
   };
 }
 function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
   return {
-    professionalComparison: {
-      heading: t("professional.heading"),
-      ageLabel: t("professional.ageLabel"),
-      differenceLabel: t("professional.differenceLabel"),
-      sourceLabel: t("professional.source"),
-      methodLabel: t("professional.method"),
-      dateLabel: t("professional.date"),
-      notice: t("professional.notice"),
-    },
-    productName: t("pdf.productName"),
-    experimentalBadge: t("workspace.badge"),
-    documentTitle: t("pdf.title"),
-    documentSubtitle: t("pdf.subtitle"),
-    generatedOnTemplate: t("pdf.generatedOn"),
     estimatedBoneAgeLabel: t("result.estimated"),
     estimatedAgeText: ageText(r.months),
-    estimatedBoneAgeCaption: t("pdf.ensembleCaption"),
+    estimatedBoneAgeCaption: t("result.ensembleCaption"),
     chronologicalAgeLabel: t("result.chrono"),
     chronologicalAgeText: chrono === undefined ? undefined : ageText(chrono),
     differenceLabel: t("result.difference"),
-    differenceCaption: t("result.differenceNote"),
     notInformedValue: t("result.noChrono"),
-    notComputedValue: t("report.notComputed"),
-    examDataHeading: t("form.title"),
-    sexLabel: t("pdf.sexLabel"),
-    sexValue: t(r.sex === "male" ? "sex.male" : "sex.female"),
-    dateOfBirthLabel: t("pdf.dobLabel"),
-    examinationDateLabel: t("form.examDate"),
-    sourceFileLabel: t("pdf.fileLabel"),
-    analysedImageSizeLabel: t("pdf.imageSizeLabel"),
-    radiographHeading: t("pdf.radiograph"),
-    radiographCaption: t("pdf.radiographCaption"),
-    technicalHeading: t("pdf.technical"),
-    ensembleMeanLabel: t("pdf.ensembleMean"),
-    networkOutputLabelTemplate: t("pdf.networkOutput"),
+    notComputedValue: t("result.notComputed"),
     stdDevLabel: t("result.stddevLabel"),
     stdDevValueTemplate: t("result.stddevValueTemplate"),
-    runtimeLabel: t("pdf.runtime"),
-    cropLabel: t("pdf.cropLabel"),
-    modelLabel: t("pdf.modelLabel"),
-    modelRevisionLabel: t("pdf.revisionLabel"),
-    executionEnvironmentLabel: t("pdf.environmentLabel"),
-    executionEnvironmentValue: t("pdf.environmentValue"),
-    preprocessingLabel: t("pdf.preprocessingLabel"),
-    preprocessingValue: t("pdf.preprocessingValue"),
-    referencesHeading: t("pdf.references"),
-    referenceModelLine: t("pdf.refModel"),
-    referenceArchitectureLine: t("pdf.refArchitecture"),
-    referenceDatasetLine: t("pdf.refDataset"),
-    referenceLicenseLine: t("pdf.refLicense"),
-    referenceApplicationLine: t("pdf.refApplication"),
-    disclaimerHeading: t("pdf.disclaimerHeading"),
-    disclaimerText: t("report.disclaimer"),
-    privacyNote: t("report.privacy"),
-    siteUrl: t("pdf.siteName"),
-    siteLink: t("pdf.siteUrl"),
-    promoEyebrow: t("pdf.promoEyebrow"),
-    promoHeading: t("pdf.promoHeading"),
-    promoText: t("pdf.promoText"),
-    promoQrCaption: t("pdf.promoQr"),
-    pageNumberTemplate: t("pdf.pageNumber"),
-    monthsValueTemplate: t("report.monthsValue"),
-    secondsValueTemplate: t("pdf.secondsValue"),
+    monthsValueTemplate: t("result.monthsValue"),
     differenceValueTemplate: t("result.differenceMonths"),
-    cropValueTemplate: t("pdf.cropValue"),
-    imageSizeValueTemplate: t("pdf.imageSizeValue"),
     befundHeading: t("befund.heading"),
     befundBoneAgeLabel: t("befund.boneAgeLabel"),
     befundChronoLabel: t("befund.chronoLabel"),
@@ -643,34 +478,6 @@ function reportLabels(r: Result, chrono: number | undefined): ReportLabels {
     heightCitation: t("height.citation"),
   };
 }
-el("professional-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  if (!result) return;
-  el("professional-error").hidden = true;
-  try {
-    result.professional = readProfessionalAssessment({
-      years: el<HTMLInputElement>("professional-years").value,
-      months: el<HTMLInputElement>("professional-months").value,
-      method: el<HTMLInputElement>("professional-method").value,
-      source: el<HTMLInputElement>("professional-source").value,
-      date: el<HTMLInputElement>("professional-date").value,
-      sameExam: el<HTMLInputElement>("professional-same-exam").checked,
-    }, result.examDate, today());
-    showResult(result);
-    el<HTMLDetailsElement>("professional-entry").open = false;
-    el("professional-entry-summary").focus();
-  } catch (cause) {
-    el("professional-error").textContent = cause instanceof Error ? cause.message : t("professional.fieldsError");
-    el("professional-error").hidden = false;
-  }
-});
-el("professional-remove").addEventListener("click", () => {
-  if (!result) return;
-  result.professional = undefined;
-  el<HTMLFormElement>("professional-form").reset();
-  el("professional-error").hidden = true;
-  showResult(result);
-});
 el("befund-copy").addEventListener("click", () => {
   const b = currentBefund();
   if (!b || b.outOfRange) return;
@@ -689,41 +496,6 @@ el("befund-copy").addEventListener("click", () => {
     .then(() => notice(t("befund.copied")))
     .catch(() => error(t("befund.copyFailed")));
 });
-el("download-report").addEventListener("click", () => {
-  if (!result) return;
-  const r = result;
-  const radiograph = analysedCanvas(r);
-  if (!radiograph) return error(t("msg.reportFailed"));
-  // Snapshot metadata, language and crop before the asynchronous JPEG export.
-  const input = reportInput(r, radiograph);
-  const downloadName = `${t("report.filename")}-${r.examDate}.pdf`;
-  void (async () => {
-    try {
-      const blob = await new Promise<Blob | null>((resolve) =>
-        radiograph.toBlob(resolve, "image/jpeg", 0.92),
-      );
-      if (!blob) throw new Error("no image");
-      const pdf = buildReportPdf({
-        ...input,
-        generatedAt: new Date().toISOString(),
-        image: {
-          ...input.image,
-          jpeg: new Uint8Array(await blob.arrayBuffer()),
-        },
-      });
-      const url = URL.createObjectURL(
-        new Blob([pdf], { type: "application/pdf" }),
-      );
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = downloadName;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch {
-      error(t("msg.reportFailed"));
-    }
-  })();
-});
 el("reset").addEventListener("click", () => {
   ++fileGeneration;
   finishWorker();
@@ -740,7 +512,6 @@ el("reset").addEventListener("click", () => {
   el("error").hidden = el("notice").hidden = true;
   el("image-format").textContent = t("image.localFile");
   el("file-info").textContent = "";
-  el("step-2").classList.remove("active");
   refresh();
 });
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
@@ -799,27 +570,7 @@ function applyTranslations() {
     for (const node of document.querySelectorAll<HTMLElement>(selector))
       node.setAttribute(attribute, t(node.dataset[dataset] as Key));
 }
-function applyLang(value: Lang, persist: boolean) {
-  setLang(value);
-  if (persist)
-    try {
-      localStorage.setItem(LANG_STORAGE, value);
-    } catch {
-      /* Private modes reject storage; the choice then lasts for this page only. */
-    }
-  for (const code of LANGUAGES)
-    el(`lang-${code}`).setAttribute("aria-pressed", String(code === value));
-  applyTranslations();
-  el("model-status").textContent = t(statusKey);
-  el("image-format").textContent = image ? image.format : t("image.localFile");
-  if (image)
-    el("file-info").textContent =
-      `${filename} · ${image.width} × ${image.height}`;
-  // Transient messages were written in the previous language; drop them.
-  el("error").hidden = el("notice").hidden = true;
-  if (result) showResult(result);
-  refresh();
-}
-for (const code of LANGUAGES)
-  el(`lang-${code}`).addEventListener("click", () => applyLang(code, true));
-applyLang(lang(), false);
+applyTranslations();
+el("model-status").textContent = t(statusKey);
+el("image-format").textContent = t("image.localFile");
+refresh();

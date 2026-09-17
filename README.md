@@ -38,8 +38,18 @@ Apache-2.0 lizenziert. Details und Lizenztexte: `web/public/model-license.txt`,
 - Die Playwright-E2E-Tests des Originals (Portugiesisch/Englisch-Texte)
   wurden nicht auf Deutsch übertragen und entfernt — Aufwand/Nutzen für
   dieses persönliche Projekt stand in keinem Verhältnis. Die Unit-Tests
-  (`web/tests/*.test.ts`, u. a. Bildverarbeitung, PDF-Erzeugung, QR-Code,
-  i18n-Vollständigkeit) sind unverändert vorhanden und laufen mit `npm test`.
+  (`web/tests/*.test.ts`, u. a. Bildverarbeitung, i18n-Vollständigkeit)
+  sind vorhanden und laufen mit `npm test`.
+- **Radikal vereinfachte Oberfläche für den persönlichen Gebrauch**: Hero-
+  Bereich, Schritt-Anzeige, Beispielbild-Demo, fachärztlicher Vergleich,
+  FAQ-/Über-Sektion, Modell-Credits-Sektion, Altersskala-Grafik,
+  Netzwerk-Detailanzeige, Quellen-/Referenzen-Block und der **PDF-Export
+  wurden entfernt** (samt `report.ts`, `professional.ts`, `qr.ts` und der
+  toten Sprachumschalter-Infrastruktur). Das Ergebnis besteht nur noch aus
+  der Kopfzeile (Knochenalter/chronologisches Alter/Differenz), dem
+  Standard-Befund und — falls eine Grösse eingetragen wurde — der
+  Endgrössen-Prognose; der Befund-Text lässt sich weiterhin über
+  "Befund-Text kopieren" in die Zwischenablage übernehmen.
 - **Standard-Befund** nach Greulich-Pyle-Systematik ergänzt: Knochenalter
   wird gegen chronologisches Alter ± 2 Standardabweichungen klassifiziert
   (Retardierung/Beschleunigung/Normbefund), mit der **echten publizierten

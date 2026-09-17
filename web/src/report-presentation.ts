@@ -1,8 +1,75 @@
-import type { ReportInput } from "./report";
 import { greulichPyleSd } from "./greulich-pyle-sd";
 import { predictAdultHeight } from "./bayley-pinneau";
 
 const CM_PER_INCH = 2.54;
+
+/** Every string the screen can show. Flat on purpose: each field maps to one i18n key. */
+export interface ReportLabels {
+  estimatedBoneAgeLabel: string;
+  estimatedAgeText: string;
+  estimatedBoneAgeCaption: string;
+  chronologicalAgeLabel: string;
+  chronologicalAgeText?: string;
+  differenceLabel: string;
+  notInformedValue: string;
+  notComputedValue: string;
+  stdDevLabel: string;
+  stdDevValueTemplate: string;
+  monthsValueTemplate: string;
+  differenceValueTemplate: string;
+
+  /** Standard-Befund block: static labels, values computed per result. */
+  befundHeading: string;
+  befundBoneAgeLabel: string;
+  befundChronoLabel: string;
+  befundStdDevLabel: string;
+  befundUpperLabel: string;
+  befundLowerLabel: string;
+  /** A year/month age. Template: {years}, {months}. */
+  befundAgeValueTemplate: string;
+  /** Opening clause of the concluding sentence. */
+  befundIntro: string;
+  befundRetardation: string;
+  befundAcceleration: string;
+  befundNormal: string;
+  /** Shown instead of the fields when the chronological age is outside the
+   * Greulich-Pyle table's range for the given sex. */
+  befundOutOfRange: string;
+  befundCitation: string;
+
+  /** Bayley-Pinneau adult height prediction block: static labels. */
+  heightHeading: string;
+  heightCurrentLabel: string;
+  heightCategoryLabel: string;
+  heightCategoryAverage: string;
+  heightCategoryAccelerated: string;
+  heightCategoryRetarded: string;
+  heightPmhLabel: string;
+  heightPredictedLabel: string;
+  /** A height value. Template: {cm}. */
+  heightCmValueTemplate: string;
+  /** A percentage value. Template: {percent}. */
+  heightPercentValueTemplate: string;
+  heightOutOfRange: string;
+  heightCitation: string;
+}
+
+export interface ReportInput {
+  /** Ensemble estimate in months. */
+  months: number;
+  /** The three individual network outputs, in months; used for the ensemble SD. */
+  folds: number[];
+  /** Biological sex given to the network. */
+  sex: "male" | "female";
+  /** Chronological age in months, or undefined when no date of birth. */
+  chronologicalMonths?: number;
+  /** Current height in cm, for the Bayley-Pinneau prediction; undefined when not entered. */
+  heightCm?: number;
+  /** BCP 47 locale used for number formatting. */
+  locale: string;
+  /** Every display string. */
+  labels: ReportLabels;
+}
 
 export function fill(template: string, values: Record<string, string>): string {
   return String(template ?? "").replace(/\{(\w+)\}/g, (match, key: string) =>
@@ -30,44 +97,7 @@ export function formatInteger(value: number): string {
   return Number.isFinite(value) ? String(Math.round(value)) : String(value);
 }
 
-export function formatIsoDate(iso: string, locale: string): string {
-  const text = String(iso ?? "").trim();
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
-  if (!match) return text;
-  const date = new Date(
-    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-  );
-  if (Number.isNaN(date.getTime())) return text;
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: "UTC",
-    }).format(date);
-  } catch {
-    return text;
-  }
-}
-
-/** Descriptive axis only: its domain is not a clinical reference interval. */
-export function scaleOf(values: number[], x = 0, width = 100) {
-  const finite = values.filter(Number.isFinite);
-  const low = finite.length ? Math.min(...finite) : 0;
-  const high = finite.length ? Math.max(...finite) : 0;
-  const pad = Math.max((high - low) * 0.75, 6);
-  const min = Math.max(0, low - pad);
-  const max = high + pad;
-  const span = max - min || 1;
-  return {
-    min,
-    max,
-    at: (value: number) =>
-      x + ((Math.min(Math.max(value, min), max) - min) / span) * width,
-  };
-}
-
-/** One set of values, rounding rules and field order for the screen and PDF. */
+/** One set of values, rounding rules and field order for the screen. */
 export function presentReport(input: ReportInput) {
   const l = input.labels;
   const locale = input.locale || "en-US";
@@ -81,15 +111,10 @@ export function presentReport(input: ReportInput) {
   const difference =
     chronological === undefined ? undefined : input.months - chronological;
   const foldValues = Array.isArray(input.folds) ? input.folds : [];
-  const folds = foldValues.map((value, index) => ({
-    label: fill(l.networkOutputLabelTemplate, { index: String(index + 1) }),
-    value: monthsValue(value, 4),
-    months: value,
-  }));
   // Sample standard deviation (n-1) of the ensemble's individual fold
   // predictions around their mean (input.months). This is the spread between
   // the three networks, not a clinical confidence interval for one patient
-  // (see result.stddevNote / report.disclaimer).
+  // (see result.stddevNote).
   const stdDevMonths =
     foldValues.length > 1
       ? Math.sqrt(
@@ -202,72 +227,9 @@ export function presentReport(input: ReportInput) {
             citation: l.heightCitation,
           };
         })();
-  const examFields = [
-    { label: l.sexLabel, value: l.sexValue },
-    {
-      label: l.dateOfBirthLabel,
-      value: input.dateOfBirth
-        ? formatIsoDate(input.dateOfBirth, locale)
-        : l.notInformedValue,
-    },
-    {
-      label: l.examinationDateLabel,
-      value: formatIsoDate(input.examinationDate, locale),
-    },
-    { label: l.sourceFileLabel, value: input.fileName },
-    {
-      label: l.analysedImageSizeLabel,
-      value:
-        input.image.width > 0 && input.image.height > 0
-          ? fill(l.imageSizeValueTemplate, {
-              width: formatInteger(input.image.width),
-              height: formatInteger(input.image.height),
-            })
-          : l.notInformedValue,
-    },
-  ];
-  const technicalFields = [
-    {
-      label: l.runtimeLabel,
-      value: fill(l.secondsValueTemplate, {
-        seconds: decimal(input.seconds, 1),
-      }),
-    },
-    ...(stdDevMonths === undefined
-      ? []
-      : [{ label: l.stdDevLabel, value: stdDevValue }]),
-    { label: l.modelLabel, value: input.modelId },
-    { label: l.modelRevisionLabel, value: input.modelRevision },
-    { label: l.executionEnvironmentLabel, value: l.executionEnvironmentValue },
-    {
-      label: l.cropLabel,
-      value: fill(l.cropValueTemplate, {
-        x0: formatInteger(input.crop.x0),
-        y0: formatInteger(input.crop.y0),
-        x1: formatInteger(input.crop.x1),
-        y1: formatInteger(input.crop.y1),
-      }),
-    },
-  ];
-  const professional = input.professional;
-  const comparisonLabels = l.professionalComparison;
-  const professionalDifference = professional ? input.months - professional.months : undefined;
-  const comparison = professional && comparisonLabels ? {
-    fields: [
-      { label: comparisonLabels.ageLabel, value: monthsValue(professional.months) },
-      { label: comparisonLabels.differenceLabel, value: fill(l.differenceValueTemplate, {
-        sign: professionalDifference! < 0 ? "-" : "+", months: decimal(Math.abs(professionalDifference!), 1),
-      }) },
-      { label: comparisonLabels.sourceLabel, value: professional.source },
-      { label: comparisonLabels.methodLabel, value: professional.method },
-      { label: comparisonLabels.dateLabel, value: formatIsoDate(professional.date, locale) },
-    ],
-  } : undefined;
   return {
-    professional: comparison,
     chronological,
     difference,
-    monthsValue,
     estimatedValue: monthsValue(input.months),
     chronologicalValue:
       chronological === undefined
@@ -280,20 +242,9 @@ export function presentReport(input: ReportInput) {
             sign: difference < 0 ? "-" : "+",
             months: decimal(Math.abs(difference), 1),
           }),
-    meanValue: monthsValue(input.months, 4),
     stdDevMonths,
     stdDevValue,
     befund,
     heightPrediction,
-    examFields,
-    technicalFields,
-    folds,
-    references: [
-      l.referenceModelLine,
-      l.referenceArchitectureLine,
-      l.referenceDatasetLine,
-      l.referenceLicenseLine,
-      l.referenceApplicationLine,
-    ],
   };
 }

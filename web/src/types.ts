@@ -1,5 +1,3 @@
-import type { ProfessionalAssessment } from "./professional";
-
 export interface GrayImage {
   pixels: Uint8Array;
   width: number;
@@ -31,14 +29,9 @@ export interface Manifest {
 export interface Result {
   months: number;
   folds: number[];
-  seconds: number;
-  revision: string;
-  model: string;
-  crop: Crop;
   sex: "male" | "female";
   dob: string;
   examDate: string;
   /** Current height in cm, for the Bayley-Pinneau height prediction; empty if not entered. */
   heightCm: string;
-  professional?: ProfessionalAssessment;
 }

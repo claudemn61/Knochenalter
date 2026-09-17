@@ -1,7 +1,7 @@
 import * as ort from "onnxruntime-web/wasm";
 import { cropPixels, matchHistogram, resizeAndPad } from "./processing";
 import type { Manifest, ModelFile } from "./types";
-import { setLang, t } from "./i18n";
+import { t } from "./i18n";
 
 const tell = (data: object) => self.postMessage(data);
 const sha256 = async (data: Uint8Array) =>
@@ -119,7 +119,6 @@ async function loadWeights(
 self.onmessage = async ({ data }) => {
   try {
     const { base, weightsBase, mode } = data;
-    setLang(data.lang);
     const manifestResponse = await loadMetadata(
       new URL("models/manifest.json", weightsBase),
     ).catch(() => undefined);

@@ -21,91 +21,9 @@
   </head>
   <body>
     <header class="site-header wrap">
-      <a
-        class="brand"
-        href="./"
-        data-i18n-aria-label="nav.brand"
-        aria-label="Knochenalter, Startseite"
-        ><span class="brand-mark" aria-hidden="true">b<span>°</span></span
-        >Knochenalter<span class="brand-tag">LOKAL</span></a
-      >
-      <nav data-i18n-aria-label="nav.label" aria-label="Navigation">
-        <a href="#ueber" data-i18n="nav.how">So funktioniert's</a
-        ><a
-          href="https://github.com/claudemn61/Knochenalter"
-          target="_blank"
-          rel="noreferrer"
-          data-i18n-html="nav.source"
-          >Quellcode <span aria-hidden="true">↗</span></a
-        >
-      </nav>
+      <span class="brand" data-i18n="nav.brand">Knochenalter</span>
     </header>
     <main class="wrap">
-      <section class="hero" aria-labelledby="title">
-        <div>
-          <p class="eyebrow">
-            <span class="status-dot"></span>
-            <span data-i18n="hero.eyebrow"
-              >KÜNSTLICHE INTELLIGENZ · LOKALE VERARBEITUNG</span
-            >
-          </p>
-          <h1 id="title" data-i18n-html="hero.title">
-            Knochenalter. <br /><span>In deinem Browser.</span>
-          </h1>
-          <p class="hero-description" data-i18n-html="hero.description">
-            Von der Röntgenaufnahme zur Schätzung der Skelettreife. <br />Deine
-            Dateien bleiben von Anfang bis Ende bei dir.
-          </p>
-        </div>
-        <aside class="local-note">
-          <svg
-            width="24"
-            height="28"
-            viewBox="0 0 24 28"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M12 2 22 6v8c0 6-10 12-10 12S2 20 2 14V6L12 2Z"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path d="m7 13 3 3 7-7" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-          <div>
-            <strong data-i18n="hero.localTitle"
-              >Dein Gerät. Deine Daten.</strong
-            >
-            <p data-i18n-html="hero.localText">
-              Kein Upload auf einen Server. <br />Keine Registrierung. Kein
-              Tracking.
-            </p>
-          </div>
-        </aside>
-      </section>
-
-      <div class="workspace-heading">
-        <h2 data-i18n="workspace.title">Neue Analyse</h2>
-        <span class="experiment-badge" data-i18n="workspace.badge"
-          >EXPERIMENTELLE NUTZUNG</span
-        >
-      </div>
-      <ol
-        class="steps"
-        data-i18n-aria-label="steps.label"
-        aria-label="Schritte der Analyse"
-      >
-        <li class="active" id="step-1" data-i18n-html="steps.one">
-          <span>01</span> Röntgenbild öffnen
-        </li>
-        <li id="step-2" data-i18n-html="steps.two">
-          <span>02</span> Bild vorbereiten
-        </li>
-        <li id="step-3" data-i18n-html="steps.three">
-          <span>03</span> Knochenalter berechnen
-        </li>
-      </ol>
-
       <div id="error" class="message error" role="alert" hidden></div>
       <div id="notice" class="message notice" role="status" hidden></div>
 
@@ -161,13 +79,6 @@
             <small data-i18n="dropzone.limit"
               >Originaldatei empfohlen · bis 100 MB</small
             >
-          </div>
-          <div class="demo-bar">
-            <span data-i18n="demo.hint">Gerade kein Röntgenbild zur Hand?</span
-            ><button id="demo" type="button" class="text-button">
-              <span data-i18n="demo.button">Beispiel analysieren</span>
-              <span aria-hidden="true">→</span>
-            </button>
           </div>
           <div id="viewer" hidden>
             <div class="canvas-container">
@@ -242,7 +153,6 @@
         <form id="analysis-form" class="data-panel">
           <div class="panel-title">
             <h3 data-i18n="form.title">Untersuchungsdaten</h3>
-            <span class="small-label">02</span>
           </div>
           <fieldset id="exam-fields">
             <label class="field-label" for="sex" data-i18n-html="form.sex"
@@ -326,19 +236,10 @@
         data-i18n-aria-label="model.label"
         aria-label="Lokales Modell"
       >
-        <div class="model-icon" aria-hidden="true">▦</div>
-        <div class="model-description">
-          <strong
-            >ianpan/bone-age
-            <span data-i18n="model.networks"
-              >3 Netzwerke · WebAssembly</span
-            ></strong
-          >
-          <p id="model-status" data-i18n="model.initial">
-            Beim ersten Gebrauch werden ca. 340 MB heruntergeladen. Danach
-            werden die zwischengespeicherten Gewichte wiederverwendet.
-          </p>
-        </div>
+        <p id="model-status" data-i18n="model.initial">
+          Beim ersten Gebrauch werden ca. 340 MB heruntergeladen. Danach
+          werden die zwischengespeicherten Gewichte wiederverwendet.
+        </p>
         <button
           id="prepare"
           class="secondary-button"
@@ -364,40 +265,14 @@
         aria-labelledby="result-title"
         hidden
       >
-        <div class="result-heading">
-          <div>
-            <p class="eyebrow" data-i18n="result.eyebrow">
-              VERARBEITUNG AUF DIESEM GERÄT ABGESCHLOSSEN
-            </p>
-            <h2 id="result-title" data-i18n="pdf.title">
-              Bericht zum Knochenalter
-            </h2>
-            <p class="report-subtitle" data-i18n="pdf.subtitle">
-              Lokal im Browser erstellte Schätzung, ausgehend von einem
-              Röntgenbild der linken Hand.
-            </p>
-          </div>
-          <div class="report-actions">
-            <span class="report-badge" data-i18n="workspace.badge"
-              >EXPERIMENTELLE NUTZUNG</span
-            >
-            <button
-              id="download-report"
-              type="button"
-              class="secondary-button"
-              data-i18n="result.save"
-            >
-              Bericht speichern ↓
-            </button>
-          </div>
-        </div>
+        <h2 id="result-title" data-i18n="result.title">Ergebnis</h2>
         <div class="report-summary">
           <div class="result-grid">
             <div class="primary-result">
               <span data-i18n="result.estimated">Geschätztes Knochenalter</span
               ><strong id="result-months"></strong>
               <p id="result-age" class="human-age"></p>
-              <p data-i18n="pdf.ensembleCaption">Mittelwert der drei Netzwerke</p>
+              <p data-i18n="result.ensembleCaption">Mittelwert der drei Netzwerke</p>
               <p id="result-stddev" class="human-age"></p>
               <p class="scale-caption" data-i18n="result.stddevNote">
                 Streuung der drei Einzelnetzwerke — ein Mass für die
@@ -413,41 +288,8 @@
             <div>
               <span data-i18n="result.difference">Geschätzte Differenz</span
               ><strong id="result-difference"></strong>
-              <p data-i18n="result.differenceNote">
-                Beschreibender Vergleich, keine diagnostische Einordnung.
-              </p>
             </div>
           </div>
-          <div class="age-scale" aria-hidden="true">
-            <div class="age-rail">
-              <span id="age-comparison-span"></span>
-              <span
-                id="age-chrono-marker"
-                class="age-marker chrono-marker"
-              ></span>
-              <span
-                id="age-estimate-marker"
-                class="age-marker estimate-marker"
-              ></span>
-            </div>
-            <div class="age-scale-ends">
-              <span id="age-scale-min"></span><span id="age-scale-max"></span>
-            </div>
-          </div>
-          <div class="age-legend" aria-hidden="true">
-            <span class="estimate-key" data-i18n="result.estimated"
-              >Geschätztes Knochenalter</span
-            >
-            <span
-              id="age-chrono-legend"
-              class="chrono-key"
-              data-i18n="result.chrono"
-              >Chronologisches Alter</span
-            >
-          </div>
-          <p class="scale-caption" data-i18n="result.scaleNote">
-            Beschreibende Altersskala, ohne Normbereich.
-          </p>
         </div>
         <section id="befund-section" class="report-section befund-section" aria-labelledby="befund-title" hidden>
           <div class="befund-heading">
@@ -466,110 +308,11 @@
           <p id="height-message" class="befund-conclusion"></p>
           <p id="height-citation" class="result-note"></p>
         </section>
-        <section id="professional-comparison" class="report-section professional-comparison" aria-labelledby="professional-comparison-title" hidden>
-          <h3 id="professional-comparison-title" data-i18n="professional.heading">Vergleich mit eingetragener fachärztlicher Beurteilung</h3>
-          <dl id="professional-comparison-data" class="report-fields"></dl>
-          <p class="result-note" data-i18n="professional.notice">Von dir eingetragene Werte zur selben Untersuchung, von der App nicht überprüft. Die Differenz sagt nicht aus, welche Beurteilung zutrifft, und verändert die KI-Schätzung nicht.</p>
-        </section>
-        <details id="professional-entry" class="professional-entry">
-          <summary id="professional-entry-summary" data-i18n="professional.entry">Fachärztliche Beurteilung hinzufügen oder bearbeiten · optional</summary>
-          <p data-i18n="professional.help">Falls bereits eine Beurteilung dieses Röntgenbilds vorliegt, hier das Knochenalter eintragen und die Quelle angeben. Diese Angaben bleiben nur in dieser Sitzung und werden nach dem Speichern ins PDF übernommen.</p>
-          <form id="professional-form" novalidate autocomplete="off">
-            <div class="professional-fields">
-              <fieldset class="professional-age"><legend data-i18n="professional.ageLabel">Eingetragenes Knochenalter</legend>
-                <label><span data-i18n="professional.years">Ganze Jahre</span><input id="professional-years" type="number" min="0" max="20" step="1" required /></label>
-                <label><span data-i18n="professional.months">Zusätzliche Monate</span><input id="professional-months" type="number" min="0" max="11" step="1" required /></label>
-              </fieldset>
-              <label><span data-i18n="professional.method">Angegebene Methode</span><input id="professional-method" type="text" maxlength="80" required aria-describedby="professional-method-help" /><small id="professional-method-help" data-i18n="professional.methodHelp">Z. B. Greulich-Pyle, TW3 oder der Name des Systems. Falls unbekannt, „nicht angegeben“ eintragen.</small></label>
-              <label><span data-i18n="professional.source">Ärztin/Arzt oder Dienst (Quelle)</span><input id="professional-source" type="text" maxlength="120" required /></label>
-              <label><span data-i18n="professional.date">Datum der Beurteilung</span><input id="professional-date" type="date" required /></label>
-            </div>
-            <label class="confirm-label"><input id="professional-same-exam" type="checkbox" required /><span data-i18n="professional.sameExam">Ich bestätige, dass sich diese Beurteilung auf dasselbe oben gezeigte Röntgenbild und Untersuchungsdatum bezieht.</span></label>
-            <p id="professional-error" class="message error" role="alert" hidden></p>
-            <div class="professional-actions"><button type="submit" class="secondary-button" data-i18n="professional.save">Vergleich speichern</button><button id="professional-remove" type="button" class="text-button" data-i18n="professional.remove" hidden>Vergleich entfernen</button></div>
-          </form>
-        </details>
-        <p class="result-note" data-i18n="result.note">
-          Das Ergebnis hängt von Bildqualität, Ausrichtung und Zuschnitt ab.
-          Die Differenz zwischen den Altersangaben allein belegt keine abnorm
-          verzögerte oder vorauseilende Reifung.
-        </p>
-        <section class="report-section" aria-labelledby="result-exam-title">
-          <h3 id="result-exam-title" data-i18n="form.title">Untersuchungsdaten</h3>
-          <dl id="result-exam-data" class="report-fields exam-data"></dl>
-        </section>
-        <div class="report-body">
-          <section class="report-section" aria-labelledby="result-image-title">
-            <h3 id="result-image-title" data-i18n="pdf.radiograph">
-              Analysiertes Röntgenbild
-            </h3>
-            <figure class="report-figure">
-              <div class="radiograph-plate">
-                <canvas
-                  id="result-radiograph"
-                  role="img"
-                  data-i18n-aria-label="pdf.radiograph"
-                  aria-label="Analysiertes Röntgenbild"
-                ></canvas>
-              </div>
-              <button id="review-result-image" type="button" class="secondary-button" data-i18n="review.open">Vergrössern und prüfen</button>
-              <figcaption data-i18n="pdf.radiographCaption">
-                Ausgerichteter Ausschnitt, vor Histogrammabgleich und
-                Skalierung. Das Bild wurde nie an einen Server gesendet.
-              </figcaption>
-            </figure>
-          </section>
-          <section
-            class="report-section"
-            aria-labelledby="result-execution-title"
-          >
-            <h3 id="result-execution-title" data-i18n="pdf.technical">
-              Ausführung
-            </h3>
-            <div class="network-chart">
-              <div class="network-head">
-                <span data-i18n="pdf.ensembleMean">Ensemble-Mittelwert</span
-                ><strong id="result-mean"></strong>
-              </div>
-              <div id="result-networks"></div>
-              <p data-i18n="result.networkNote">
-                Die Übereinstimmung zwischen den Netzwerken ist kein Mass für
-                die individuelle Genauigkeit.
-              </p>
-            </div>
-            <dl
-              id="execution-details"
-              class="report-fields technical-data"
-            ></dl>
-          </section>
-        </div>
-        <section
-          class="report-disclaimer"
-          aria-labelledby="result-disclaimer-title"
-        >
-          <h3 id="result-disclaimer-title" data-i18n="pdf.disclaimerHeading">
-            Hinweis
-          </h3>
-          <p data-i18n="report.disclaimer">
-            Experimentelles Ergebnis. Dies ist kein ärztlicher Befund und
-            stellt keine Diagnose dar. Der veröffentlichte mittlere Fehler
-            ist kein individuelles Konfidenzintervall.
-          </p>
-        </section>
-        <section
-          class="report-section report-credits"
-          aria-labelledby="result-references-title"
-        >
-          <h3 id="result-references-title" data-i18n="pdf.references">
-            Quellen und Nachweise
-          </h3>
-          <div id="result-references"></div>
-        </section>
-        <p class="report-privacy" data-i18n="report.privacy">
-          Es wurden kein Bild und keine Untersuchungsdaten an einen Server
-          gesendet.
-        </p>
       </section>
+
+      <button id="reset" class="text-button" type="button" data-i18n="about.reset">
+        Aktuelle Analyse verwerfen
+      </button>
 
       <dialog id="image-review" aria-labelledby="review-title" aria-describedby="review-help">
         <div class="review-heading"><h2 id="review-title" data-i18n="review.title">Bild prüfen</h2><button type="button" id="review-close" class="secondary-button" data-i18n="review.close" autofocus>Schliessen</button></div>
@@ -579,148 +322,12 @@
           <label class="review-zoom-label" for="review-zoom"><span data-i18n="review.zoom">Zoom</span><input id="review-zoom" type="range" min="1" max="3" step="0.25" value="1" /><output id="review-zoom-value" for="review-zoom">100%</output></label>
           <button type="button" id="review-fit" class="text-button" data-i18n="review.fit">An Bildschirm anpassen</button>
         </div>
-        <div id="review-viewport" tabindex="0" data-i18n-aria-label="review.pan" aria-label="Vergrössertes Bild. Zum Erkunden scrollen."><canvas id="review-canvas" role="img" data-i18n-aria-label="pdf.radiograph" aria-label="Analysiertes Röntgenbild"></canvas></div>
+        <div id="review-viewport" tabindex="0" data-i18n-aria-label="review.pan" aria-label="Vergrössertes Bild. Zum Erkunden scrollen."><canvas id="review-canvas" role="img" aria-label="Röntgenbild"></canvas></div>
         <p class="review-footnote" data-i18n="review.footnote">Um zu drehen oder den Zuschnitt anzupassen, dieses Fenster schliessen und die Bildsteuerung verwenden. Das Zoomen verändert die Analysedaten nicht.</p>
       </dialog>
-
-      <section class="about" id="ueber">
-        <div>
-          <p class="eyebrow" data-i18n="about.eyebrow">
-            TRANSPARENZ ALS PRINZIP
-          </p>
-          <h2 data-i18n-html="about.title">
-            Was passiert <br />mit deinem Bild?
-          </h2>
-          <p data-i18n-html="about.text">
-            Es bleibt im Arbeitsspeicher dieser Seite. <br />Beim Neuladen
-            oder Schliessen des Tabs werden die Analysedaten verworfen.
-          </p>
-          <button
-            id="reset"
-            class="text-button"
-            type="button"
-            data-i18n="about.reset"
-          >
-            Aktuelle Analyse verwerfen ↗
-          </button>
-        </div>
-        <div class="faq">
-          <details open>
-            <summary data-i18n="faq.q1">Wie wird die Schätzung berechnet?</summary>
-            <p data-i18n-html="faq.a1">
-              Drei ConvNeXtV2-Netzwerke des Modells
-              <a
-                href="https://huggingface.co/ianpan/bone-age"
-                target="_blank"
-                rel="noreferrer"
-                >ianpan/bone-age</a
-              >
-              analysieren die linke Hand und das angegebene Geschlecht. Das
-              Ergebnis ist der Mittelwert der drei Vorhersagen in Monaten. Die
-              App wendet einen Histogrammabgleich an und skaliert das Bild
-              auf 512 × 512 Pixel.
-            </p>
-          </details>
-          <details>
-            <summary data-i18n="faq.q2">Welche Bilder kann ich öffnen?</summary>
-            <p data-i18n="faq.a2">
-              DICOM Part 10, mit oder ohne Dateiendung, monochrom 8/16-Bit
-              unkomprimiert oder JPEG-Baseline; JPEG, PNG, einseitiges TIFF,
-              WebP, BMP und AVIF. DICOM JPEG Lossless, JPEG-LS, JPEG 2000 und
-              Multiframe müssen zuerst in ein unterstütztes Format exportiert
-              werden. Am besten das Original-Röntgenbild der linken Hand in
-              PA-Projektion verwenden.
-            </p>
-          </details>
-          <details>
-            <summary data-i18n="faq.q3">Funktioniert es ohne Internet?</summary>
-            <p data-i18n="faq.a3">
-              Ja, sobald die Seite geöffnet ist und der Modell-Download mit
-              verfügbarem Cache abgeschlossen wurde. Das Internet wird nur
-              zum Laden der Seite und der Modellgewichte aus dem öffentlichen
-              GitHub-Repository benötigt. Es wird nie ein Bild, Datum oder
-              Ergebnis versendet. Der Browser kann den Cache bei
-              Speicherplatzmangel löschen. Der erste Durchlauf kann langsam
-              sein; ein aktueller Desktop-Browser mit freiem Arbeitsspeicher
-              eignet sich am besten.
-            </p>
-          </details>
-          <details>
-            <summary data-i18n="faq.q4">Wo liegt die klinische Grenze?</summary>
-            <p data-i18n="faq.a4">
-              Dieses Werkzeug ist experimentell, und das Modell ist nicht für
-              den klinischen Einsatz zugelassen. Der veröffentlichte
-              mittlere Fehler auf dem Testdatensatz ist nicht die
-              Fehlerspanne für eine einzelne Person. Die technische
-              Validierung der ONNX-Konvertierung ist keine klinische
-              Validierung.
-            </p>
-          </details>
-        </div>
-      </section>
-      <section class="credits" id="nachweise" aria-labelledby="credits-title">
-        <div>
-          <p class="eyebrow" data-i18n="credits.eyebrow">MODELL-NACHWEIS</p>
-          <h2 id="credits-title" data-i18n="credits.title">
-            Das KI-Modell stammt von Ian Pan.
-          </h2>
-        </div>
-        <div>
-          <p data-i18n-html="credits.text">
-            Die Schätzung stammt vom Modell
-            <a
-              href="https://huggingface.co/ianpan/bone-age"
-              target="_blank"
-              rel="noreferrer"
-              >ianpan/bone-age</a
-            >, erstellt und trainiert von
-            <a
-              href="https://huggingface.co/ianpan"
-              target="_blank"
-              rel="noreferrer"
-              >Ian Pan</a
-            >
-            anhand von 14'036 Röntgenbildern der
-            <a
-              href="https://www.rsna.org/rsnai/ai-image-challenge/rsna-pediatric-bone-age-challenge-2017"
-              target="_blank"
-              rel="noreferrer"
-              >RSNA Pediatric Bone Age Challenge 2017</a
-            >, mit ConvNeXtV2-Architektur und Apache-2.0-Lizenz.
-          </p>
-          <p data-i18n-html="credits.role">
-            Diese App hat nichts trainiert oder angepasst: Sie konvertiert
-            die öffentlichen Gewichte nach ONNX und führt sie in deinem
-            Browser aus. Die eigentliche Leistung stammt vom Autor des
-            Modells. Die Browser-Anwendung basiert auf
-            <a
-              href="https://github.com/feliperun/bone-age"
-              target="_blank"
-              rel="noreferrer"
-              >feliperun/bone-age</a
-            >
-            (MIT-Lizenz) und wurde für diese deutschsprachige Version
-            angepasst.
-          </p>
-        </div>
-      </section>
     </main>
     <footer class="site-footer wrap">
-      <span
-        >Knochenalter
-        <span class="muted" data-i18n="footer.tagline"
-          >/ ein offenes Forschungswerkzeug</span
-        ></span
-      ><span
-        ><span data-i18n="footer.by">Basierend auf der App von</span>
-        <a
-          href="https://github.com/feliperun"
-          target="_blank"
-          rel="noreferrer"
-          class="footer-link"
-          >@feliperun <span aria-hidden="true">↗</span></a
-        ></span
-      ><span data-i18n="footer.license">Modell Apache-2.0 · Code MIT</span>
+      <span data-i18n="footer.license">Modell Apache-2.0 · Code MIT</span>
     </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
