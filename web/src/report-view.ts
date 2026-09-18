@@ -7,6 +7,9 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) =>
 /** The `befund` block of the presentation last rendered, for the copy button. */
 let lastBefund: ReturnType<typeof presentReport>["befund"];
 export const currentBefund = () => lastBefund;
+/** The `heightPrediction` block of the presentation last rendered, for the copy button. */
+let lastHeightPrediction: ReturnType<typeof presentReport>["heightPrediction"];
+export const currentHeightPrediction = () => lastHeightPrediction;
 
 function fields(id: string, rows: { label: string; value: string }[]) {
   el(id).replaceChildren(
@@ -25,6 +28,7 @@ function fields(id: string, rows: { label: string; value: string }[]) {
 export function renderReport(input: ReportInput) {
   const p = presentReport(input);
   lastBefund = p.befund;
+  lastHeightPrediction = p.heightPrediction;
   el("result-months").textContent = p.estimatedAgeValue;
   el("result-chrono").textContent = p.chronologicalAgeValue;
   el("result-stddev").textContent = p.stdDevValue;

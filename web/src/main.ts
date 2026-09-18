@@ -7,7 +7,7 @@ import {
 } from "./processing";
 import type { Crop, GrayImage, Result } from "./types";
 import type { ReportInput, ReportLabels } from "./report-presentation";
-import { currentBefund, renderReport } from "./report-view";
+import { currentBefund, currentHeightPrediction, renderReport } from "./report-view";
 import { createImageReview } from "./image-review";
 import { t, type Key } from "./i18n";
 
@@ -495,6 +495,27 @@ el("befund-copy").addEventListener("click", () => {
     "",
     b.conclusion,
   ];
+  const height = currentHeightPrediction();
+  if (height?.state === "ok") {
+    // Longest label here ("Erreichter Anteil der Erwachsenengrösse:") is
+    // well past the Befund block's LABEL_WIDTH, so this block gets its own
+    // padding width - the two blocks are visually separated by the heading
+    // and a blank line, so they don't need to share a column position.
+    const HEIGHT_LABEL_WIDTH = 44;
+    const heightRows: [string, string][] = [
+      [height.currentLabel, height.currentValue],
+      [height.categoryLabel, height.categoryValue],
+      [height.pmhLabel, height.pmhValue],
+      [height.predictedLabel, height.predictedValue],
+    ];
+    lines.push(
+      "",
+      height.heading,
+      ...heightRows.map(
+        ([label, value]) => `${padTo(label, HEIGHT_LABEL_WIDTH)}${value}`,
+      ),
+    );
+  }
   const text = lines.join("\n");
   void (async () => {
     try {
