@@ -478,14 +478,16 @@ el("befund-copy").addEventListener("click", () => {
     [b.lowerLabel, b.lowerValue],
   ];
   // Every rich-text layout attempt (a <table>; a table-free <div>/<span>
-  // side-by-side layout) still arrived in the reader's target app (Word,
-  // Apple Notes, Apple Pages) as an editable table cell/box - apparently
-  // any side-by-side block arrangement, not just an actual <table>, gets
-  // "upgraded" into one on paste. A single real tab character cannot be:
-  // it is just text. Padding every label to the same character count
-  // already lines up the values closely enough in Arial (space and letter
-  // widths differ, but not by much at this scale) - an added tab beyond
-  // that padding overshoots to the next tab stop, so no line gets one.
+  // side-by-side layout; a single <div style="white-space:pre-wrap"> with
+  // an inline Arial/9.5pt style) ended up mangled in the reader's target
+  // app (Word, Apple Notes, Apple Pages): either "upgraded" into an
+  // editable table/box, or - the div attempt - had its style attribute
+  // (and with it white-space:pre-wrap) stripped on paste, collapsing every
+  // run of spaces/tabs/newlines into a single space and losing all
+  // structure. Plain text has no style to strip and no tag to "upgrade":
+  // this is the one clipboard flavour offered now, no text/html fallback.
+  // Font (Arial 9.5pt) can no longer travel with it; the tradeoff favours
+  // the text actually arriving as separate, aligned lines.
   const padTo = (label: string, width: number) => label.padEnd(width, " ");
   const LABEL_WIDTH = 30;
   const lines = [
@@ -494,32 +496,9 @@ el("befund-copy").addEventListener("click", () => {
     b.conclusion,
   ];
   const text = lines.join("\n");
-  const font = "font-family:Arial, Helvetica, sans-serif; font-size:9.5pt;";
-  // One block of preformatted text, not a row of boxes - nothing here for
-  // a paste handler to read as tabular structure.
-  const html =
-    `<div style="${font} white-space:pre-wrap;">` +
-    lines
-      .map((line) =>
-        line
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;"),
-      )
-      .join("\n") +
-    `</div>`;
   void (async () => {
     try {
-      if (typeof ClipboardItem !== "undefined") {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "text/plain": new Blob([text], { type: "text/plain" }),
-            "text/html": new Blob([html], { type: "text/html" }),
-          }),
-        ]);
-      } else {
-        await navigator.clipboard.writeText(text);
-      }
+      await navigator.clipboard.writeText(text);
       notice(t("befund.copied"));
     } catch {
       error(t("befund.copyFailed"));
