@@ -181,6 +181,15 @@
             <p class="field-help" data-i18n="form.heightCmHelp">
               Für eine Endgrössen-Prognose nach Bayley-Pinneau.
             </p>
+            <label class="field-label" for="height-father-cm" data-i18n-html="form.heightFatherCm"
+              >Körpergrösse Vater <span>optional, cm</span></label
+            ><input id="height-father-cm" type="number" min="100" max="250" step="0.1" />
+            <label class="field-label" for="height-mother-cm" data-i18n-html="form.heightMotherCm"
+              >Körpergrösse Mutter <span>optional, cm</span></label
+            ><input id="height-mother-cm" type="number" min="100" max="250" step="0.1" />
+            <p class="field-help" data-i18n="form.heightParentsHelp">
+              Für die genetische Zielgrösse (Mid-Parental Height).
+            </p>
             <div class="chrono-line">
               <span data-i18n="form.chrono">Alter am Untersuchungsdatum</span
               ><strong id="chrono">—</strong>
@@ -300,6 +309,13 @@
           <dl id="height-fields" class="report-fields"></dl>
           <p id="height-message" class="befund-conclusion"></p>
           <p id="height-citation" class="result-note"></p>
+        </section>
+        <section id="target-section" class="report-section befund-section" aria-labelledby="target-title" hidden>
+          <div class="befund-heading">
+            <h3 id="target-title" data-i18n="target.heading">Genetische Zielgrösse (Mid-Parental Height)</h3>
+          </div>
+          <dl id="target-fields" class="report-fields"></dl>
+          <p id="target-citation" class="result-note"></p>
         </section>
       </section>
 

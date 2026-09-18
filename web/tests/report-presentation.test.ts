@@ -38,6 +38,11 @@ const labels: ReportLabels = {
   heightPercentValueTemplate: "{percent} %",
   heightOutOfRange: "Fora da faixa etária da tabela de referência.",
   heightCitation: "Bayley & Pinneau, 1952, Tabelas IIA–IIE / IIIA–IIIF.",
+
+  targetHeading: "Estatura-alvo genética (mid-parental height)",
+  targetLabel: "Estatura-alvo:",
+  targetValueTemplate: "{target} cm ({low}–{high} cm)",
+  targetCitation: "Tanner, Goldstein & Whitehouse, 1970.",
 };
 
 function input(overrides: Partial<ReportInput> = {}): ReportInput {
@@ -249,5 +254,44 @@ describe("Endgrössen-Prognose (Bayley-Pinneau)", () => {
         input({ sex: "male", heightCm: 150, chronologicalMonths: undefined }),
       ).heightPrediction,
     ).toBeUndefined();
+  });
+});
+
+describe("genetische Zielgrösse (Mid-Parental Height)", () => {
+  it("adds 13cm and halves for boys", () => {
+    const t = presentReport(
+      input({ sex: "male", heightFatherCm: 180, heightMotherCm: 165 }),
+    ).targetHeight;
+    // (180 + 165 + 13) / 2 = 179
+    expect(t).toEqual({
+      heading: labels.targetHeading,
+      label: labels.targetLabel,
+      value: "179,0 cm (170,5–187,5 cm)",
+      citation: labels.targetCitation,
+    });
+  });
+
+  it("subtracts 13cm and halves for girls", () => {
+    const t = presentReport(
+      input({ sex: "female", heightFatherCm: 180, heightMotherCm: 165 }),
+    ).targetHeight;
+    // (180 + 165 - 13) / 2 = 166
+    expect(t?.value).toBe("166,0 cm (157,5–174,5 cm)");
+  });
+
+  it("needs both parents' heights, but neither bone age nor chronological age", () => {
+    expect(
+      presentReport(input({ sex: "male", heightFatherCm: 180 })).targetHeight,
+    ).toBeUndefined();
+    expect(
+      presentReport(
+        input({
+          sex: "male",
+          heightFatherCm: 180,
+          heightMotherCm: 165,
+          chronologicalMonths: undefined,
+        }),
+      ).targetHeight,
+    ).toBeDefined();
   });
 });

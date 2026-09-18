@@ -7,7 +7,12 @@ import {
 } from "./processing";
 import type { Crop, GrayImage, Result } from "./types";
 import type { ReportInput, ReportLabels } from "./report-presentation";
-import { currentBefund, currentHeightPrediction, renderReport } from "./report-view";
+import {
+  currentBefund,
+  currentHeightPrediction,
+  currentTargetHeight,
+  renderReport,
+} from "./report-view";
 import { createImageReview } from "./image-review";
 import { t, type Key } from "./i18n";
 
@@ -18,6 +23,8 @@ const sex = el<HTMLSelectElement>("sex");
 const dob = el<HTMLInputElement>("dob");
 const exam = el<HTMLInputElement>("exam-date");
 const heightCm = el<HTMLInputElement>("height-cm");
+const heightFatherCm = el<HTMLInputElement>("height-father-cm");
+const heightMotherCm = el<HTMLInputElement>("height-mother-cm");
 const confirmed = el<HTMLInputElement>("confirm-hand");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
@@ -175,11 +182,12 @@ async function openFile(file: File) {
     if (generation !== fileGeneration) return;
     image = decoded;
     filename = file.name;
-    const entered = sex.value || dob.value || heightCm.value;
+    const entered =
+      sex.value || dob.value || heightCm.value || heightFatherCm.value || heightMotherCm.value;
     sex.value = image.sex || "";
     dob.value = image.dob || "";
     exam.value = image.examDate || today();
-    heightCm.value = "";
+    heightCm.value = heightFatherCm.value = heightMotherCm.value = "";
     showImage();
     if (image.sex || image.dob || image.examDate) notice(t("msg.dicomFilled"));
     else if (entered) notice(t("msg.fieldsCleared"));
@@ -295,7 +303,15 @@ el("full-crop").addEventListener("click", () => {
     syncCrop();
   }
 });
-for (const input of [sex, dob, exam, heightCm, confirmed])
+for (const input of [
+  sex,
+  dob,
+  exam,
+  heightCm,
+  heightFatherCm,
+  heightMotherCm,
+  confirmed,
+])
   input.addEventListener("input", () => {
     invalidateResult();
     refresh();
@@ -371,6 +387,8 @@ function run(mode: "prepare" | "infer") {
         dob: dob.value,
         examDate: exam.value,
         heightCm: heightCm.value,
+        heightFatherCm: heightFatherCm.value,
+        heightMotherCm: heightMotherCm.value,
       };
       finishWorker();
       showResult(result!, true);
@@ -431,6 +449,8 @@ function reportInput(r: Result): ReportInput {
     sex: r.sex,
     chronologicalMonths: resultChrono(r),
     heightCm: r.heightCm ? Number(r.heightCm) : undefined,
+    heightFatherCm: r.heightFatherCm ? Number(r.heightFatherCm) : undefined,
+    heightMotherCm: r.heightMotherCm ? Number(r.heightMotherCm) : undefined,
     locale: t("app.locale"),
     labels: reportLabels(),
   };
@@ -465,6 +485,10 @@ function reportLabels(): ReportLabels {
     heightPercentValueTemplate: t("height.percentValueTemplate"),
     heightOutOfRange: t("height.outOfRange"),
     heightCitation: t("height.citation"),
+    targetHeading: t("target.heading"),
+    targetLabel: t("target.label"),
+    targetValueTemplate: t("target.valueTemplate"),
+    targetCitation: t("target.citation"),
   };
 }
 el("befund-copy").addEventListener("click", () => {
@@ -516,6 +540,8 @@ el("befund-copy").addEventListener("click", () => {
       ),
     );
   }
+  const target = currentTargetHeight();
+  if (target) lines.push("", target.heading, `${target.label} ${target.value}`);
   const text = lines.join("\n");
   void (async () => {
     try {
@@ -534,7 +560,8 @@ el("reset").addEventListener("click", () => {
   filename = "";
   dragging = undefined;
   source.width = source.height = canvas.width = canvas.height = 0;
-  sex.value = dob.value = fileInput.value = heightCm.value = "";
+  sex.value = dob.value = fileInput.value = heightCm.value =
+    heightFatherCm.value = heightMotherCm.value = "";
   exam.value = today();
   confirmed.checked = false;
   el("viewer").hidden = true;

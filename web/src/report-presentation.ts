@@ -2,6 +2,12 @@ import { greulichPyleSd } from "./greulich-pyle-sd";
 import { predictAdultHeight } from "./bayley-pinneau";
 
 const CM_PER_INCH = 2.54;
+// Classic Tanner mid-parental height formula: half the sum of both parents'
+// heights, offset by the average sex height gap (+13 cm for boys, -13 cm for
+// girls), with a customary ±8.5 cm range (≈2 SD). Independent of skeletal
+// age - unlike Bayley-Pinneau, it needs no bone-age input at all.
+const TARGET_HEIGHT_SEX_OFFSET_CM = 13;
+const TARGET_HEIGHT_RANGE_CM = 8.5;
 
 /** Every string the screen can show. Flat on purpose: each field maps to one i18n key. */
 export interface ReportLabels {
@@ -43,6 +49,13 @@ export interface ReportLabels {
   heightPercentValueTemplate: string;
   heightOutOfRange: string;
   heightCitation: string;
+
+  /** Genetic target height (mid-parental height) block: static labels. */
+  targetHeading: string;
+  targetLabel: string;
+  /** A target height with its ± range. Template: {target}, {low}, {high}. */
+  targetValueTemplate: string;
+  targetCitation: string;
 }
 
 export interface ReportInput {
@@ -54,6 +67,9 @@ export interface ReportInput {
   chronologicalMonths?: number;
   /** Current height in cm, for the Bayley-Pinneau prediction; undefined when not entered. */
   heightCm?: number;
+  /** Father's and mother's height in cm, for the genetic target height; undefined when not entered. */
+  heightFatherCm?: number;
+  heightMotherCm?: number;
   /** BCP 47 locale used for number formatting. */
   locale: string;
   /** Every display string. */
@@ -205,6 +221,29 @@ export function presentReport(input: ReportInput) {
             citation: l.heightCitation,
           };
         })();
+  // Genetic target height (mid-parental height): needs only sex and both
+  // parents' heights, independent of bone age or a chronological age.
+  const targetHeight =
+    input.heightFatherCm === undefined || input.heightMotherCm === undefined
+      ? undefined
+      : (() => {
+          const sexOffset =
+            input.sex === "male"
+              ? TARGET_HEIGHT_SEX_OFFSET_CM
+              : -TARGET_HEIGHT_SEX_OFFSET_CM;
+          const target =
+            (input.heightFatherCm! + input.heightMotherCm! + sexOffset) / 2;
+          return {
+            heading: l.targetHeading,
+            label: l.targetLabel,
+            value: fill(l.targetValueTemplate, {
+              target: decimal(target, 1),
+              low: decimal(target - TARGET_HEIGHT_RANGE_CM, 1),
+              high: decimal(target + TARGET_HEIGHT_RANGE_CM, 1),
+            }),
+            citation: l.targetCitation,
+          };
+        })();
   return {
     chronological,
     difference,
@@ -221,5 +260,6 @@ export function presentReport(input: ReportInput) {
       befund && !befund.outOfRange ? befund.stdDevValue : l.notComputedValue,
     befund,
     heightPrediction,
+    targetHeight,
   };
 }

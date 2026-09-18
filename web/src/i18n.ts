@@ -115,6 +115,9 @@ const de = {
 
   "form.heightCm": "Aktuelle Körpergrösse <span>optional, cm</span>",
   "form.heightCmHelp": "Für eine Endgrössen-Prognose nach Bayley-Pinneau.",
+  "form.heightFatherCm": "Körpergrösse Vater <span>optional, cm</span>",
+  "form.heightMotherCm": "Körpergrösse Mutter <span>optional, cm</span>",
+  "form.heightParentsHelp": "Für die genetische Zielgrösse (Mid-Parental Height).",
 
   "height.heading": "Endgrössen-Prognose (Bayley-Pinneau)",
   "height.currentLabel": "Aktuelle Körpergrösse:",
@@ -130,6 +133,12 @@ const de = {
     "Für dieses Skelettalter liegt keine passende Bayley-Pinneau-Referenztabelle vor (die Tabellen decken je nach Reifungstyp und Geschlecht ungefähr 6 bis 17–18 Jahre Skelettalter ab). Bei retardierten Jungen deckt die verfügbare Tabelle zusätzlich nur bis 13 Jahre Skelettalter ab (Fortsetzungstabelle im Original nicht verfügbar) — keine Prognose möglich.",
   "height.citation":
     "Nach Bayley N, Pinneau SR. Tables for Predicting Adult Height from Skeletal Age. J Pediatr. 1952;40(4):423–441 (Tables IIA–IIE Jungen, IIIA–IIIF Mädchen). Experimentelle Schätzung, keine individuelle Zusicherung — abhängig u. a. von Ernährung, Erkrankungen und familiärer Grösse.",
+
+  "target.heading": "Genetische Zielgrösse (Mid-Parental Height)",
+  "target.label": "Ziel-/Erwartungsgrösse:",
+  "target.valueTemplate": "{target} cm ({low}–{high} cm)",
+  "target.citation":
+    "Nach Tanner JM, Goldstein H, Whitehouse RH. Standards for children's height at ages 2–9 years allowing for heights of parents. Arch Dis Child. 1970;45(244):755–762. Elterngrössen-basierte Schätzung (Ziel ± 8.5 cm, ≈ 2 SD) — unabhängig vom Knochenalter, keine individuelle Zusicherung.",
 
   "review.open": "Vergrössern und prüfen",
   "review.title": "Bild prüfen",

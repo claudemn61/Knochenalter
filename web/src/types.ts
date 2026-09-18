@@ -33,4 +33,7 @@ export interface Result {
   examDate: string;
   /** Current height in cm, for the Bayley-Pinneau height prediction; empty if not entered. */
   heightCm: string;
+  /** Parents' heights in cm, for the genetic target height; empty if not entered. */
+  heightFatherCm: string;
+  heightMotherCm: string;
 }

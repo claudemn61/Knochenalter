@@ -10,6 +10,9 @@ export const currentBefund = () => lastBefund;
 /** The `heightPrediction` block of the presentation last rendered, for the copy button. */
 let lastHeightPrediction: ReturnType<typeof presentReport>["heightPrediction"];
 export const currentHeightPrediction = () => lastHeightPrediction;
+/** The `targetHeight` block of the presentation last rendered, for the copy button. */
+let lastTargetHeight: ReturnType<typeof presentReport>["targetHeight"];
+export const currentTargetHeight = () => lastTargetHeight;
 
 function fields(id: string, rows: { label: string; value: string }[]) {
   el(id).replaceChildren(
@@ -29,6 +32,7 @@ export function renderReport(input: ReportInput) {
   const p = presentReport(input);
   lastBefund = p.befund;
   lastHeightPrediction = p.heightPrediction;
+  lastTargetHeight = p.targetHeight;
   el("result-months").textContent = p.estimatedAgeValue;
   el("result-chrono").textContent = p.chronologicalAgeValue;
   el("result-stddev").textContent = p.stdDevValue;
@@ -63,5 +67,12 @@ export function renderReport(input: ReportInput) {
     fields("height-fields", []);
     el("height-message").textContent = p.heightPrediction.message;
     el("height-citation").textContent = "";
+  }
+  el("target-section").hidden = !p.targetHeight;
+  if (p.targetHeight) {
+    fields("target-fields", [
+      { label: p.targetHeight.label, value: p.targetHeight.value },
+    ]);
+    el("target-citation").textContent = p.targetHeight.citation;
   }
 }
