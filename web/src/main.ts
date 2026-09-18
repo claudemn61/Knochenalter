@@ -487,11 +487,17 @@ el("befund-copy").addEventListener("click", () => {
   // tab stop for every line even though Arial is proportional - padding
   // to equal length by itself would not align (space width differs from
   // letter width), but it keeps each line's tab starting close enough to
-  // the same position that they land on the same next stop.
+  // the same position that they land on the same next stop. The first
+  // (longest) label's padded width alone already reaches that stop, so an
+  // added tab there overshoots to the next one - that line skips the tab.
   const padTo = (label: string, width: number) => label.padEnd(width, " ");
   const LABEL_WIDTH = 30;
   const lines = [
-    ...rows.map(([label, value]) => `${padTo(label, LABEL_WIDTH)}\t${value}`),
+    ...rows.map(([label, value], index) =>
+      index === 0
+        ? `${padTo(label, LABEL_WIDTH)}${value}`
+        : `${padTo(label, LABEL_WIDTH)}\t${value}`,
+    ),
     "",
     b.conclusion,
   ];

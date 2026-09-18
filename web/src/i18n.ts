@@ -97,13 +97,13 @@ const de = {
   "befund.upperLabel": "Obere Grenze (+2 SD):",
   "befund.lowerLabel": "Untere Grenze (-2 SD):",
   "befund.ageValueTemplate": "{years} Jahre {months} Monate",
-  "befund.intro": "Somit handelt es sich um ein Knochenalter",
+  "befund.intro": "Es handelt sich um ein Knochenalter",
   "befund.retardation":
-    "mit mehr als 2-facher Standardabweichung unterhalb des chronologischen Alters, einer Retardierung entsprechend.",
+    "mit mehr als 2-facher Standardabweichung unterhalb des chronologischen Alters, und entspricht somit einer Retardierung.",
   "befund.acceleration":
-    "mit mehr als 2-facher Standardabweichung oberhalb des chronologischen Alters, einer Beschleunigung entsprechend.",
+    "mit mehr als 2-facher Standardabweichung oberhalb des chronologischen Alters, und entspricht somit einer Beschleunigung.",
   "befund.normal":
-    "innerhalb der 2-fachen Standardabweichung zum chronologischen Alter, einem Normbefund entsprechend.",
+    "innerhalb der 2-fachen Standardabweichung zum chronologischen Alter, und entspricht somit einem Normbefund.",
   "befund.outOfRange":
     "Für dieses chronologische Alter liegt keine Greulich-Pyle-Referenz-Standardabweichung vor (Tabelle deckt bei Jungen 1–17 Jahre, bei Mädchen 1–15 Jahre ab). Kein Standard-Befund möglich.",
   "befund.citation":
