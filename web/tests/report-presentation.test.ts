@@ -16,9 +16,9 @@ const labels: ReportLabels = {
   befundBoneAgeLabel: "Idade óssea biológica:",
   befundChronoLabel: "Idade cronológica:",
   befundStdDevLabel: "Desvio padrão:",
-  befundUpperLabel: "Limite superior (+2 DP):",
-  befundLowerLabel: "Limite inferior (-2 DP):",
+  befundRangeLabel: "Faixa normal (±2 DP):",
   befundAgeValueTemplate: "{years} anos {months} meses",
+  befundRangeValueTemplate: "{low} – {high}",
   befundIntro: "Trata-se, portanto, de uma idade óssea",
   befundRetardation: "com mais de 2 desvios-padrão abaixo da idade cronológica, compatível com retardo.",
   befundAcceleration: "com mais de 2 desvios-padrão acima da idade cronológica, compatível com aceleração.",
@@ -126,10 +126,8 @@ describe("Standard-Befund (Greulich-Pyle)", () => {
       chronoValue: "11 anos 0 meses",
       stdDevLabel: labels.befundStdDevLabel,
       stdDevValue: "10,5 meses",
-      upperLabel: labels.befundUpperLabel,
-      upperValue: "12 anos 9 meses",
-      lowerLabel: labels.befundLowerLabel,
-      lowerValue: "9 anos 3 meses",
+      rangeLabel: labels.befundRangeLabel,
+      rangeValue: "9 anos 3 meses – 12 anos 9 meses",
       conclusion: `${labels.befundIntro} ${labels.befundRetardation}`,
       citation: labels.befundCitation,
     });
@@ -146,8 +144,7 @@ describe("Standard-Befund (Greulich-Pyle)", () => {
       `${labels.befundIntro} ${labels.befundAcceleration}`,
     );
     expect(b.stdDevValue).toBe("8,8 meses");
-    expect(b.upperValue).toBe("9 anos 6 meses");
-    expect(b.lowerValue).toBe("6 anos 6 meses");
+    expect(b.rangeValue).toBe("6 anos 6 meses – 9 anos 6 meses");
   });
 
   it("classifies within 2 SD of chronological age as normal, boundary inclusive", () => {

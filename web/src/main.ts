@@ -464,9 +464,9 @@ function reportLabels(): ReportLabels {
     befundBoneAgeLabel: t("befund.boneAgeLabel"),
     befundChronoLabel: t("befund.chronoLabel"),
     befundStdDevLabel: t("befund.stddevLabel"),
-    befundUpperLabel: t("befund.upperLabel"),
-    befundLowerLabel: t("befund.lowerLabel"),
+    befundRangeLabel: t("befund.rangeLabel"),
     befundAgeValueTemplate: t("befund.ageValueTemplate"),
+    befundRangeValueTemplate: t("befund.rangeValueTemplate"),
     befundIntro: t("befund.intro"),
     befundRetardation: t("befund.retardation"),
     befundAcceleration: t("befund.acceleration"),
@@ -498,8 +498,7 @@ el("befund-copy").addEventListener("click", () => {
     [b.boneAgeLabel, b.boneAgeValue],
     [b.chronoLabel, b.chronoValue],
     [b.stdDevLabel, b.stdDevValue],
-    [b.upperLabel, b.upperValue],
-    [b.lowerLabel, b.lowerValue],
+    [b.rangeLabel, b.rangeValue],
   ];
   // Every rich-text layout attempt (a <table>; a table-free <div>/<span>
   // side-by-side layout; a single <div style="white-space:pre-wrap"> with

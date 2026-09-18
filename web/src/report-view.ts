@@ -47,8 +47,7 @@ export function renderReport(input: ReportInput) {
       { label: p.befund.boneAgeLabel, value: p.befund.boneAgeValue },
       { label: p.befund.chronoLabel, value: p.befund.chronoValue },
       { label: p.befund.stdDevLabel, value: p.befund.stdDevValue },
-      { label: p.befund.upperLabel, value: p.befund.upperValue },
-      { label: p.befund.lowerLabel, value: p.befund.lowerValue },
+      { label: p.befund.rangeLabel, value: p.befund.rangeValue },
     ]);
     el("befund-conclusion").textContent = p.befund.conclusion;
     el("befund-citation").textContent = p.befund.citation;

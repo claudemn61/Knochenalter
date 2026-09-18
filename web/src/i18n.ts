@@ -94,8 +94,8 @@ const de = {
   "befund.boneAgeLabel": "Biologisches Knochenalter:",
   "befund.chronoLabel": "Chronologisches Alter:",
   "befund.stddevLabel": "SD (Greulich-Pyle):",
-  "befund.upperLabel": "Obere Grenze (+2 SD):",
-  "befund.lowerLabel": "Untere Grenze (-2 SD):",
+  "befund.rangeLabel": "Normbereich (±2 SD):",
+  "befund.rangeValueTemplate": "{low} – {high}",
   "befund.ageValueTemplate": "{years} Jahre {months} Monate",
   "befund.intro": "Es handelt sich um ein Knochenalter",
   "befund.retardation":

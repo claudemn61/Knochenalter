@@ -20,10 +20,11 @@ export interface ReportLabels {
   befundBoneAgeLabel: string;
   befundChronoLabel: string;
   befundStdDevLabel: string;
-  befundUpperLabel: string;
-  befundLowerLabel: string;
+  befundRangeLabel: string;
   /** A year/month age. Template: {years}, {months}. */
   befundAgeValueTemplate: string;
+  /** The ±2 SD range, from two already-formatted ages. Template: {low}, {high}. */
+  befundRangeValueTemplate: string;
   /** Opening clause of the concluding sentence. */
   befundIntro: string;
   befundRetardation: string;
@@ -166,12 +167,11 @@ export function presentReport(input: ReportInput) {
               chronoValue: yearsMonthsValue(chronological),
               stdDevLabel: l.befundStdDevLabel,
               stdDevValue: monthsValue(gpSdMonths, 1),
-              upperLabel: l.befundUpperLabel,
-              upperValue: yearsMonthsValue(chronological + threshold),
-              lowerLabel: l.befundLowerLabel,
-              lowerValue: yearsMonthsValue(
-                Math.max(0, chronological - threshold),
-              ),
+              rangeLabel: l.befundRangeLabel,
+              rangeValue: fill(l.befundRangeValueTemplate, {
+                low: yearsMonthsValue(Math.max(0, chronological - threshold)),
+                high: yearsMonthsValue(chronological + threshold),
+              }),
               conclusion: `${l.befundIntro} ${conclusionClause}`,
               citation: l.befundCitation,
             };
