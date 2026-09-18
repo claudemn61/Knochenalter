@@ -526,7 +526,6 @@ progress::-moz-progress-bar {
 }
 .result-grid .primary-result strong {
   color: var(--green);
-  font-size: 38px;
   font-weight: 600;
 }
 .result-grid p {
@@ -642,9 +641,6 @@ body:has(#image-review[open]) { overflow: hidden; }
   .result-grid strong {
     font-size: 21px;
   }
-  .result-grid .primary-result strong {
-    font-size: 30px;
-  }
 }
 @media (max-width: 680px) {
   .wrap {
@@ -684,8 +680,7 @@ body:has(#image-review[open]) { overflow: hidden; }
     padding: 0;
     border: 0;
   }
-  .result-grid strong,
-  .result-grid .primary-result strong {
+  .result-grid strong {
     font-size: 30px;
     margin: 5px 0;
   }
