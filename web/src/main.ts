@@ -482,22 +482,14 @@ el("befund-copy").addEventListener("click", () => {
   // Apple Notes, Apple Pages) as an editable table cell/box - apparently
   // any side-by-side block arrangement, not just an actual <table>, gets
   // "upgraded" into one on paste. A single real tab character cannot be:
-  // it is just text. Every label is padded to the same character count
-  // first (longest is 26) so the tab after it lands on the same following
-  // tab stop for every line even though Arial is proportional - padding
-  // to equal length by itself would not align (space width differs from
-  // letter width), but it keeps each line's tab starting close enough to
-  // the same position that they land on the same next stop. The first
-  // (longest) label's padded width alone already reaches that stop, so an
-  // added tab there overshoots to the next one - that line skips the tab.
+  // it is just text. Padding every label to the same character count
+  // already lines up the values closely enough in Arial (space and letter
+  // widths differ, but not by much at this scale) - an added tab beyond
+  // that padding overshoots to the next tab stop, so no line gets one.
   const padTo = (label: string, width: number) => label.padEnd(width, " ");
   const LABEL_WIDTH = 30;
   const lines = [
-    ...rows.map(([label, value], index) =>
-      index === 0
-        ? `${padTo(label, LABEL_WIDTH)}${value}`
-        : `${padTo(label, LABEL_WIDTH)}\t${value}`,
-    ),
+    ...rows.map(([label, value]) => `${padTo(label, LABEL_WIDTH)}${value}`),
     "",
     b.conclusion,
   ];
