@@ -47,8 +47,6 @@ const de = {
   "form.dob": "Geburtsdatum <span>optional</span>",
   "form.examDate": "Untersuchungsdatum",
   "form.chrono": "Alter am Untersuchungsdatum",
-  "form.confirm":
-    "Ich bestätige, dass der Ausschnitt die <strong>linke Hand in PA-Projektion</strong> zeigt, alle fünf Finger vollständig nach oben zeigend und das Handgelenk sichtbar.",
   "form.submit": 'Knochenalter berechnen <span aria-hidden="true">→</span>',
   "form.cancel": "Verarbeitung abbrechen",
   "form.clinicalNote":

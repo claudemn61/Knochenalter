@@ -263,21 +263,6 @@ select {
   font-weight: 500;
   text-align: right;
 }
-.confirm-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.6;
-}
-.confirm-label input {
-  accent-color: var(--green);
-  margin: 3px 0 0;
-  flex-shrink: 0;
-  width: 15px;
-  height: 15px;
-}
 .primary-button {
   display: flex;
   align-items: center;

@@ -25,7 +25,6 @@ const exam = el<HTMLInputElement>("exam-date");
 const heightCm = el<HTMLInputElement>("height-cm");
 const heightFatherCm = el<HTMLInputElement>("height-father-cm");
 const heightMotherCm = el<HTMLInputElement>("height-mother-cm");
-const confirmed = el<HTMLInputElement>("confirm-hand");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
 const source = document.createElement("canvas");
@@ -98,7 +97,6 @@ function refresh() {
     busy ||
     !image ||
     !sex.value ||
-    !confirmed.checked ||
     !validDates ||
     !validateCrop(crop, image.width, image.height);
 }
@@ -125,7 +123,6 @@ function setBusy(value: boolean) {
 function syncCrop() {
   for (const key of ["x0", "y0", "x1", "y1"] as const)
     el<HTMLInputElement>(key).value = String(crop[key]);
-  confirmed.checked = false;
   invalidateResult();
   refresh();
   draw();
@@ -286,7 +283,6 @@ for (const name of ["pointerup", "pointercancel", "lostpointercapture"])
 for (const key of ["x0", "y0", "x1", "y1"] as const)
   el<HTMLInputElement>(key).addEventListener("input", () => {
     crop[key] = Number(el<HTMLInputElement>(key).value);
-    confirmed.checked = false;
     invalidateResult();
     refresh();
     if (image && validateCrop(crop, image.width, image.height)) draw();
@@ -310,7 +306,6 @@ for (const input of [
   heightCm,
   heightFatherCm,
   heightMotherCm,
-  confirmed,
 ])
   input.addEventListener("input", () => {
     invalidateResult();
@@ -327,7 +322,7 @@ function finishWorker() {
 }
 function run(mode: "prepare" | "infer") {
   if (busy) return;
-  if (mode === "infer" && (!image || !sex.value || !confirmed.checked)) return;
+  if (mode === "infer" && (!image || !sex.value)) return;
   // terminate() does not retract a message the worker already posted, so a
   // result can still arrive after a reset that cleared the examination fields.
   const generation = ++fileGeneration;
@@ -562,7 +557,6 @@ el("reset").addEventListener("click", () => {
   sex.value = dob.value = fileInput.value = heightCm.value =
     heightFatherCm.value = heightMotherCm.value = "";
   exam.value = today();
-  confirmed.checked = false;
   el("viewer").hidden = true;
   el("dropzone").hidden = false;
   el("error").hidden = el("notice").hidden = true;
