@@ -25,6 +25,9 @@ const exam = el<HTMLInputElement>("exam-date");
 const heightCm = el<HTMLInputElement>("height-cm");
 const heightFatherCm = el<HTMLInputElement>("height-father-cm");
 const heightMotherCm = el<HTMLInputElement>("height-mother-cm");
+const boneAgeYears = el<HTMLInputElement>("bone-age-years");
+const boneAgeMonths = el<HTMLInputElement>("bone-age-months");
+const boneAgeHint = el("bone-age-hint");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
 const source = document.createElement("canvas");
@@ -43,6 +46,10 @@ let filename = "";
 let crop: Crop = { x0: 0, y0: 0, x1: 0, y1: 0 };
 let worker: Worker | undefined;
 let result: Result | undefined;
+// Bone age in whole months, editable after inference; seeded from the
+// model's estimate on a fresh result, then whatever the year/month fields
+// hold. Defined exactly when `result` is.
+let editedMonths: number | undefined;
 let busy = false,
   fileGeneration = 0;
 let dragging: { x: number; y: number } | undefined;
@@ -62,6 +69,27 @@ const ageText = (months: number) => {
     monthWord: t(m === 1 ? "age.month" : "age.monthPlural"),
   });
 };
+function setBoneAgeInputs(months: number) {
+  boneAgeYears.value = String(Math.floor(months / 12));
+  boneAgeMonths.value = String(months % 12);
+}
+function onBoneAgeEdit() {
+  if (!result) return;
+  const years = Math.max(0, Number(boneAgeYears.value) || 0);
+  const months = Math.max(0, Number(boneAgeMonths.value) || 0);
+  editedMonths = Math.min(240, Math.round(years * 12 + months));
+  const modelRounded = Math.round(result.months);
+  if (editedMonths === modelRounded) boneAgeHint.hidden = true;
+  else {
+    boneAgeHint.textContent = t("result.manualHint", {
+      value: ageText(result.months),
+    });
+    boneAgeHint.hidden = false;
+  }
+  renderReport(reportInput(result));
+}
+boneAgeYears.addEventListener("input", onBoneAgeEdit);
+boneAgeMonths.addEventListener("input", onBoneAgeEdit);
 function error(message: string) {
   el("error").textContent = message;
   el("error").hidden = false;
@@ -78,6 +106,9 @@ function status(key: Key) {
 function invalidateResult() {
   imageReview.close();
   result = undefined;
+  editedMonths = undefined;
+  boneAgeYears.value = boneAgeMonths.value = "";
+  boneAgeHint.hidden = true;
   el("result").hidden = true;
 }
 function refresh() {
@@ -385,6 +416,9 @@ function run(mode: "prepare" | "infer") {
         heightFatherCm: heightFatherCm.value,
         heightMotherCm: heightMotherCm.value,
       };
+      editedMonths = Math.round(result!.months);
+      setBoneAgeInputs(editedMonths);
+      boneAgeHint.hidden = true;
       finishWorker();
       showResult(result!, true);
       status("model.executed");
@@ -440,7 +474,7 @@ function showResult(r: Result, scroll = false) {
 }
 function reportInput(r: Result): ReportInput {
   return {
-    months: r.months,
+    months: editedMonths ?? r.months,
     sex: r.sex,
     chronologicalMonths: resultChrono(r),
     heightCm: r.heightCm ? Number(r.heightCm) : undefined,

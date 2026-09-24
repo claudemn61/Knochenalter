@@ -33,7 +33,6 @@ export function renderReport(input: ReportInput) {
   lastBefund = p.befund;
   lastHeightPrediction = p.heightPrediction;
   lastTargetHeight = p.targetHeight;
-  el("result-months").textContent = p.estimatedAgeValue;
   el("result-chrono").textContent = p.chronologicalAgeValue;
   el("result-stddev").textContent = p.stdDevValue;
   el("befund-section").hidden = !p.befund;

@@ -270,9 +270,29 @@
         <div class="report-summary">
           <div class="result-grid">
             <div class="primary-result">
-              <span data-i18n="result.estimated">Geschätztes Knochenalter</span
-              ><strong id="result-months"></strong>
+              <span data-i18n="result.estimated">Geschätztes Knochenalter</span>
+              <div class="bone-age-edit">
+                <input
+                  id="bone-age-years"
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="1"
+                  data-i18n-aria-label="result.boneAgeYearsLabel"
+                  aria-label="Knochenalter, Jahre"
+                /><span data-i18n="age.yearPlural">Jahre</span
+                ><input
+                  id="bone-age-months"
+                  type="number"
+                  min="0"
+                  max="11"
+                  step="1"
+                  data-i18n-aria-label="result.boneAgeMonthsLabel"
+                  aria-label="Knochenalter, Monate"
+                /><span data-i18n="age.monthPlural">Monate</span>
+              </div>
               <p class="scale-caption" data-i18n="result.ensembleCaption">Mittelwert der drei Netzwerke</p>
+              <p id="bone-age-hint" class="bone-age-hint" hidden></p>
             </div>
             <div>
               <span data-i18n="result.chrono">Chronologisches Alter</span
