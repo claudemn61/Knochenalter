@@ -102,7 +102,7 @@ const de = {
   "befund.retardation":
     "mit mehr als 2-facher Standardabweichung unterhalb des chronologischen Alters, und entspricht somit einer Retardierung.",
   "befund.acceleration":
-    "mit mehr als 2-facher Standardabweichung oberhalb des chronologischen Alters, und entspricht somit einer Beschleunigung.",
+    "mit mehr als 2-facher Standardabweichung oberhalb des chronologischen Alters, und entspricht somit einer Akzeleration.",
   "befund.normal":
     "innerhalb der 2-fachen Standardabweichung zum chronologischen Alter, und entspricht somit einem Normbefund.",
   "befund.outOfRange":
