@@ -14,6 +14,7 @@ import {
   renderReport,
 } from "./report-view";
 import { createImageReview } from "./image-review";
+import { nearestStandardAge } from "./greulich-pyle-standard-ages";
 import { t, type Key } from "./i18n";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -46,10 +47,16 @@ let filename = "";
 let crop: Crop = { x0: 0, y0: 0, x1: 0, y1: 0 };
 let worker: Worker | undefined;
 let result: Result | undefined;
-// Bone age in whole months, editable after inference; seeded from the
-// model's estimate on a fresh result, then whatever the year/month fields
-// hold. Defined exactly when `result` is.
+// Bone age in whole months, editable after inference - always snapped to
+// the nearest Greulich-Pyle atlas plate age (see
+// greulich-pyle-standard-ages.ts), never an arbitrary in-between value.
+// Seeded from the model's estimate on a fresh result, then whatever the
+// year/month fields hold, snapped on every change. Defined exactly when
+// `result` is.
 let editedMonths: number | undefined;
+// The model's raw, unsnapped estimate in months, kept only to show in the
+// "manually adjusted" hint - never used for the Befund/height calculations.
+let modelMonths: number | undefined;
 let busy = false,
   fileGeneration = 0;
 let dragging: { x: number; y: number } | undefined;
@@ -73,23 +80,27 @@ function setBoneAgeInputs(months: number) {
   boneAgeYears.value = String(Math.floor(months / 12));
   boneAgeMonths.value = String(months % 12);
 }
+// Fires on blur/commit (not per keystroke) so a value being typed isn't
+// snapped away mid-edit; the fields then re-display the snapped result.
 function onBoneAgeEdit() {
-  if (!result) return;
+  if (!result || modelMonths === undefined) return;
   const years = Math.max(0, Number(boneAgeYears.value) || 0);
   const months = Math.max(0, Number(boneAgeMonths.value) || 0);
-  editedMonths = Math.min(240, Math.round(years * 12 + months));
-  const modelRounded = Math.round(result.months);
-  if (editedMonths === modelRounded) boneAgeHint.hidden = true;
+  const raw = Math.min(228, Math.round(years * 12 + months));
+  editedMonths = nearestStandardAge(raw, result.sex);
+  setBoneAgeInputs(editedMonths);
+  if (editedMonths === nearestStandardAge(modelMonths, result.sex))
+    boneAgeHint.hidden = true;
   else {
     boneAgeHint.textContent = t("result.manualHint", {
-      value: ageText(result.months),
+      value: ageText(modelMonths),
     });
     boneAgeHint.hidden = false;
   }
   renderReport(reportInput(result));
 }
-boneAgeYears.addEventListener("input", onBoneAgeEdit);
-boneAgeMonths.addEventListener("input", onBoneAgeEdit);
+boneAgeYears.addEventListener("change", onBoneAgeEdit);
+boneAgeMonths.addEventListener("change", onBoneAgeEdit);
 function error(message: string) {
   el("error").textContent = message;
   el("error").hidden = false;
@@ -107,6 +118,7 @@ function invalidateResult() {
   imageReview.close();
   result = undefined;
   editedMonths = undefined;
+  modelMonths = undefined;
   boneAgeYears.value = boneAgeMonths.value = "";
   boneAgeHint.hidden = true;
   el("result").hidden = true;
@@ -416,7 +428,8 @@ function run(mode: "prepare" | "infer") {
         heightFatherCm: heightFatherCm.value,
         heightMotherCm: heightMotherCm.value,
       };
-      editedMonths = Math.round(result!.months);
+      modelMonths = result!.months;
+      editedMonths = nearestStandardAge(modelMonths, result!.sex);
       setBoneAgeInputs(editedMonths);
       boneAgeHint.hidden = true;
       finishWorker();
