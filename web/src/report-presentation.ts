@@ -215,8 +215,12 @@ export function presentReport(input: ReportInput) {
               percent: decimal(prediction.pmh, 1),
             }),
             predictedLabel: l.heightPredictedLabel,
+            // Rounded to whole cm, unlike the other height figures here: a
+            // decimal place would suggest an accuracy the method does not
+            // have (published validation studies put its prediction error
+            // at roughly 4-6 cm, asymmetric by maturity category).
             predictedValue: fill(l.heightCmValueTemplate, {
-              cm: decimal(prediction.predictedHeight * CM_PER_INCH, 1),
+              cm: decimal(prediction.predictedHeight * CM_PER_INCH, 0),
             }),
             citation: l.heightCitation,
           };

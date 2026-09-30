@@ -208,8 +208,8 @@ describe("Endgrössen-Prognose (Bayley-Pinneau)", () => {
     expect(h.currentValue).toBe("152,4 cm");
     expect(h.categoryValue).toBe(labels.heightCategoryAverage);
     expect(h.pmhValue).toBe("89,0 %");
-    // 60/0.89 = 67.4157... inches = 171.236 cm -> 171.2
-    expect(h.predictedValue).toBe("171,2 cm");
+    // 60/0.89 = 67.4157... inches = 171.236 cm -> rounded to whole cm: 171
+    expect(h.predictedValue).toBe("171 cm");
   });
 
   it("reports out of range for retarded boys past 13 years skeletal age", () => {
@@ -240,8 +240,8 @@ describe("Endgrössen-Prognose (Bayley-Pinneau)", () => {
     if (!h || h.state !== "ok") throw new Error("expected an ok prediction");
     expect(h.categoryValue).toBe(labels.heightCategoryAverage);
     expect(h.pmhValue).toBe("86,2 %");
-    // 150 / 0.862 = 174.0139... -> 174.0
-    expect(h.predictedValue).toBe("174,0 cm");
+    // 150 / 0.862 = 174.0139... -> rounded to whole cm: 174
+    expect(h.predictedValue).toBe("174 cm");
   });
 
   it("is undefined without a height or without a chronological age", () => {
