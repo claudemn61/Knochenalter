@@ -121,6 +121,7 @@ function invalidateResult() {
   modelMonths = undefined;
   boneAgeYears.value = boneAgeMonths.value = "";
   boneAgeHint.hidden = true;
+  el("result-folds").textContent = "";
   el("result").hidden = true;
 }
 function refresh() {
@@ -431,6 +432,15 @@ function run(mode: "prepare" | "infer") {
       modelMonths = result!.months;
       editedMonths = nearestStandardAge(modelMonths, result!.sex);
       setBoneAgeInputs(editedMonths);
+      // Individual network estimates before averaging, not snapped to any
+      // atlas plate: a wide spread flags a case the model itself is unsure
+      // about, invisible in the averaged headline figure alone.
+      el("result-folds").textContent = t("result.foldsCaption", {
+        values: [...result!.folds]
+          .sort((a, b) => a - b)
+          .map((fold) => ageText(fold))
+          .join(", "),
+      });
       boneAgeHint.hidden = true;
       finishWorker();
       showResult(result!, true);

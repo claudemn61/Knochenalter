@@ -28,6 +28,8 @@ export interface Manifest {
 }
 export interface Result {
   months: number;
+  /** The three individual network estimates in months, before averaging. */
+  folds: number[];
   sex: "male" | "female";
   dob: string;
   examDate: string;

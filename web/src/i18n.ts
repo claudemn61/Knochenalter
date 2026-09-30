@@ -82,6 +82,7 @@ const de = {
   "result.title": "Ergebnis",
   "result.estimated": "Geschätztes Knochenalter",
   "result.ensembleCaption": "Mittelwert der drei Netzwerke",
+  "result.foldsCaption": "Einzelschätzungen: {values}",
   "result.boneAgeYearsLabel": "Knochenalter, Jahre",
   "result.boneAgeMonthsLabel": "Knochenalter, Monate",
   "result.manualHint": "Manuell angepasst (Modell-Schätzung: {value}).",
