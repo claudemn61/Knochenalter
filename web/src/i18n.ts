@@ -105,6 +105,10 @@ const de = {
     "Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.",
   "reference.younger": "← Jünger",
   "reference.older": "Älter →",
+  "reference.reconnectHint":
+    "Zuvor gewählte Referenzdaten gefunden - Zugriff bestätigen, um sie ohne erneute Auswahl zu laden.",
+  "reference.reconnect": "Wiederverbinden",
+  "reference.reconnectFailed": "Zugriff verweigert - CSV/Ordner bitte neu auswählen.",
 
   "compare.title": "Vergleich",
   "compare.close": "Schliessen",

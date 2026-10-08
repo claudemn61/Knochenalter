@@ -21,6 +21,7 @@ import {
   stepReferenceRow,
   type ReferenceRow,
 } from "./rsna-reference";
+import { loadHandle, saveHandle } from "./reference-storage";
 import { t, type Key } from "./i18n";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -93,7 +94,7 @@ let modelMonths: number | undefined;
 // each session via the file pickers below - never bundled with the app, as
 // the dataset is for non-commercial/educational use only.
 let referenceRows: ReferenceRow[] = [];
-let referenceImages: Map<string, File> | undefined;
+let referenceImages: Map<string, File | FileSystemFileHandle> | undefined;
 let referenceObjectUrl: string | undefined;
 // The row currently shown (starts at the nearest match, but can be stepped
 // away from it via the younger/older buttons below).
@@ -167,9 +168,10 @@ function updateReferenceStepButtons() {
   for (const button of referenceYoungerButtons) button.disabled = !hasYounger;
   for (const button of referenceOlderButtons) button.disabled = !hasOlder;
 }
-function showReferenceRow(row: ReferenceRow) {
-  const file = referenceImages?.get(row.id);
-  if (!file) return;
+async function showReferenceRow(row: ReferenceRow) {
+  const source = referenceImages?.get(row.id);
+  if (!source) return;
+  const file = source instanceof File ? source : await source.getFile();
   if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
   referenceObjectUrl = URL.createObjectURL(file);
   referenceImage.src = referenceObjectUrl;
@@ -197,7 +199,7 @@ function stepReference(direction: -1 | 1) {
     direction,
     referenceAvailable,
   );
-  if (next) showReferenceRow(next);
+  if (next) void showReferenceRow(next);
 }
 for (const button of referenceYoungerButtons)
   button.addEventListener("click", () => stepReference(-1));
@@ -217,15 +219,14 @@ function updateReferenceImage() {
     return;
   }
   const row = nearestReferenceRow(referenceRows, editedMonths, result.sex);
-  const file = row && referenceImages.get(row.id);
-  if (!row || !file) {
+  if (!row || !referenceImages.has(row.id)) {
     referenceContent.hidden = true;
     referenceStatus.textContent = t("reference.noMatch");
     displayedReferenceRow = undefined;
     updateReferenceStepButtons();
     return;
   }
-  showReferenceRow(row);
+  void showReferenceRow(row);
 }
 // Zoom/pan state for the compare dialog: a shared zoom level applied to both
 // images relative to each one's own best-fit size, with scroll position
@@ -304,13 +305,9 @@ function basenameNoExt(name: string) {
   const dot = base.lastIndexOf(".");
   return dot === -1 ? base : base.slice(0, dot);
 }
-referencePickCsv.addEventListener("click", () => referenceCsvInput.click());
-referencePickImages.addEventListener("click", () => referenceImagesInput.click());
-referenceCsvInput.addEventListener("change", async () => {
-  const file = referenceCsvInput.files?.[0];
-  if (!file) return;
+function applyReferenceCsvText(text: string) {
   try {
-    referenceRows = parseReferenceCsv(await file.text());
+    referenceRows = parseReferenceCsv(text);
   } catch (cause) {
     referenceRows = [];
     referenceStatus.textContent = t("reference.loadFailed", {
@@ -319,6 +316,134 @@ referenceCsvInput.addEventListener("change", async () => {
     return;
   }
   updateReferenceImage();
+}
+async function collectImageEntries(
+  dir: FileSystemDirectoryHandle,
+  into: Map<string, File | FileSystemFileHandle>,
+) {
+  for await (const entry of dir.values()) {
+    if (entry.kind === "directory")
+      await collectImageEntries(entry as FileSystemDirectoryHandle, into);
+    else if (/\.(png|jpe?g|bmp|gif|webp)$/i.test(entry.name))
+      into.set(basenameNoExt(entry.name), entry as FileSystemFileHandle);
+  }
+}
+
+// File System Access API: lets the user's picked CSV/images folder be
+// reopened in later sessions via a persisted handle (see
+// reference-storage.ts), instead of picking them again every time. Falls
+// back to the plain <input type=file> pickers below on browsers that don't
+// support it (e.g. Firefox, Safari) - session-only there, as before.
+const fsAccessSupported =
+  "showOpenFilePicker" in window && "showDirectoryPicker" in window;
+const referenceReconnect = el("reference-reconnect");
+const referenceReconnectBtn = el<HTMLButtonElement>("reference-reconnect-btn");
+let referenceCsvHandle: FileSystemFileHandle | undefined;
+let referenceImagesHandle: FileSystemDirectoryHandle | undefined;
+
+async function loadReferenceCsvFromHandle(handle: FileSystemFileHandle) {
+  try {
+    applyReferenceCsvText(await (await handle.getFile()).text());
+  } catch (cause) {
+    referenceStatus.textContent = t("reference.loadFailed", {
+      reason: cause instanceof Error ? cause.message : String(cause),
+    });
+  }
+}
+async function loadReferenceImagesFromHandle(handle: FileSystemDirectoryHandle) {
+  const map = new Map<string, File | FileSystemFileHandle>();
+  try {
+    await collectImageEntries(handle, map);
+  } catch (cause) {
+    referenceStatus.textContent = t("reference.loadFailed", {
+      reason: cause instanceof Error ? cause.message : String(cause),
+    });
+    return;
+  }
+  referenceImages = map;
+  updateReferenceImage();
+}
+function updateReferenceReconnectUi(csvPending: boolean, imagesPending: boolean) {
+  referenceReconnect.hidden = !(csvPending || imagesPending);
+}
+async function pickReferenceCsv() {
+  let handle: FileSystemFileHandle;
+  try {
+    [handle] = await window.showOpenFilePicker({
+      types: [{ description: "CSV", accept: { "text/csv": [".csv"] } }],
+    });
+  } catch (cause) {
+    if ((cause as DOMException)?.name !== "AbortError") throw cause;
+    return;
+  }
+  referenceCsvHandle = handle;
+  await saveHandle("referenceCsv", handle);
+  await loadReferenceCsvFromHandle(handle);
+}
+async function pickReferenceImages() {
+  let handle: FileSystemDirectoryHandle;
+  try {
+    handle = await window.showDirectoryPicker({ mode: "read" });
+  } catch (cause) {
+    if ((cause as DOMException)?.name !== "AbortError") throw cause;
+    return;
+  }
+  referenceImagesHandle = handle;
+  await saveHandle("referenceImages", handle);
+  await loadReferenceImagesFromHandle(handle);
+}
+async function reconnectReference() {
+  if (
+    referenceCsvHandle &&
+    (await referenceCsvHandle.queryPermission({ mode: "read" })) !== "granted"
+  ) {
+    if ((await referenceCsvHandle.requestPermission({ mode: "read" })) !== "granted")
+      referenceCsvHandle = undefined;
+  }
+  if (
+    referenceImagesHandle &&
+    (await referenceImagesHandle.queryPermission({ mode: "read" })) !== "granted"
+  ) {
+    if ((await referenceImagesHandle.requestPermission({ mode: "read" })) !== "granted")
+      referenceImagesHandle = undefined;
+  }
+  if (referenceCsvHandle) await loadReferenceCsvFromHandle(referenceCsvHandle);
+  if (referenceImagesHandle) await loadReferenceImagesFromHandle(referenceImagesHandle);
+  if (!referenceCsvHandle && !referenceImagesHandle)
+    referenceStatus.textContent = t("reference.reconnectFailed");
+  updateReferenceReconnectUi(!referenceCsvHandle, !referenceImagesHandle);
+}
+async function restoreReferenceHandles() {
+  if (!fsAccessSupported) return;
+  const [csvHandle, imagesHandle] = await Promise.all([
+    loadHandle<FileSystemFileHandle>("referenceCsv"),
+    loadHandle<FileSystemDirectoryHandle>("referenceImages"),
+  ]);
+  if (!csvHandle && !imagesHandle) return;
+  referenceCsvHandle = csvHandle;
+  referenceImagesHandle = imagesHandle;
+  const csvGranted =
+    !!csvHandle && (await csvHandle.queryPermission({ mode: "read" })) === "granted";
+  const imagesGranted =
+    !!imagesHandle &&
+    (await imagesHandle.queryPermission({ mode: "read" })) === "granted";
+  if (csvGranted) await loadReferenceCsvFromHandle(csvHandle);
+  if (imagesGranted) await loadReferenceImagesFromHandle(imagesHandle);
+  updateReferenceReconnectUi(!!csvHandle && !csvGranted, !!imagesHandle && !imagesGranted);
+}
+referenceReconnectBtn.addEventListener("click", () => void reconnectReference());
+referencePickCsv.addEventListener(
+  "click",
+  fsAccessSupported ? () => void pickReferenceCsv() : () => referenceCsvInput.click(),
+);
+referencePickImages.addEventListener(
+  "click",
+  fsAccessSupported ? () => void pickReferenceImages() : () => referenceImagesInput.click(),
+);
+referenceCsvInput.addEventListener("change", async () => {
+  const file = referenceCsvInput.files?.[0];
+  if (!file) return;
+  applyReferenceCsvText(await file.text());
 });
 referenceImagesInput.addEventListener("change", () => {
   referenceImages = new Map();
@@ -328,6 +453,7 @@ referenceImagesInput.addEventListener("change", () => {
   }
   updateReferenceImage();
 });
+void restoreReferenceHandles();
 function error(message: string) {
   el("error").textContent = message;
   el("error").hidden = false;
