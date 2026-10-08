@@ -319,8 +319,15 @@
             Noch keine Referenzdaten geladen. CSV und Bilder-Ordner aus dem lokal heruntergeladenen RSNA-Datensatz auswählen, um automatisch ein passendes Vergleichsbild zu sehen.
           </p>
           <div id="reference-content" hidden>
-            <img id="reference-image" class="reference-image" alt="" />
+            <img
+              id="reference-image"
+              class="reference-image"
+              alt=""
+              data-i18n-title="compare.zoomHint"
+              title="Doppelklick: beide Bilder gross nebeneinander"
+            />
             <p id="reference-caption" class="result-note"></p>
+            <p class="result-note" data-i18n="compare.zoomHint">Doppelklick: beide Bilder gross nebeneinander</p>
           </div>
           <p class="result-note" data-i18n="reference.disclaimer">
             Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.
@@ -366,6 +373,23 @@
         </div>
         <div id="review-viewport" tabindex="0" data-i18n-aria-label="review.pan" aria-label="Vergrössertes Bild. Zum Erkunden scrollen."><canvas id="review-canvas" role="img" aria-label="Röntgenbild"></canvas></div>
         <p class="review-footnote" data-i18n="review.footnote">Um zu drehen oder den Zuschnitt anzupassen, dieses Fenster schliessen und die Bildsteuerung verwenden. Das Zoomen verändert die Analysedaten nicht.</p>
+      </dialog>
+
+      <dialog id="compare-dialog" aria-labelledby="compare-title">
+        <div class="review-heading">
+          <h2 id="compare-title" data-i18n="compare.title">Vergleich</h2>
+          <button type="button" id="compare-close" class="secondary-button" data-i18n="compare.close" autofocus>Schliessen</button>
+        </div>
+        <div class="compare-grid">
+          <div class="compare-pane">
+            <img id="compare-patient-image" alt="" />
+            <p id="compare-patient-caption" class="result-note"></p>
+          </div>
+          <div class="compare-pane">
+            <img id="compare-reference-image" alt="" />
+            <p id="compare-reference-caption" class="result-note"></p>
+          </div>
+        </div>
       </dialog>
     </main>
     <footer class="site-footer wrap">

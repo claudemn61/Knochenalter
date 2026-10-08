@@ -104,6 +104,10 @@ const de = {
   "reference.disclaimer":
     "Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.",
 
+  "compare.title": "Vergleich",
+  "compare.close": "Schliessen",
+  "compare.zoomHint": "Doppelklick: beide Bilder gross nebeneinander",
+
   "befund.heading": "Befund",
   "befund.boneAgeLabel": "Biologisches Knochenalter:",
   "befund.chronoLabel": "Chronologisches Alter:",

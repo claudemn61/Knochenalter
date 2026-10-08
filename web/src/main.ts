@@ -42,6 +42,11 @@ const referenceStatus = el("reference-status");
 const referenceContent = el("reference-content");
 const referenceImage = el<HTMLImageElement>("reference-image");
 const referenceCaption = el("reference-caption");
+const compareDialog = el<HTMLDialogElement>("compare-dialog");
+const comparePatientImage = el<HTMLImageElement>("compare-patient-image");
+const compareReferenceImage = el<HTMLImageElement>("compare-reference-image");
+const comparePatientCaption = el("compare-patient-caption");
+const compareReferenceCaption = el("compare-reference-caption");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
 const source = document.createElement("canvas");
@@ -161,6 +166,20 @@ function updateReferenceImage() {
   });
   referenceContent.hidden = false;
 }
+function openCompareDialog() {
+  if (!image || !referenceObjectUrl) return;
+  comparePatientImage.src = source.toDataURL("image/png");
+  comparePatientCaption.textContent = `${filename} · ${image.width} × ${image.height}`;
+  compareReferenceImage.src = referenceObjectUrl;
+  compareReferenceCaption.textContent = referenceCaption.textContent || "";
+  compareDialog.showModal();
+}
+referenceImage.addEventListener("dblclick", openCompareDialog);
+canvas.addEventListener("dblclick", openCompareDialog);
+el("compare-close").addEventListener("click", () => compareDialog.close());
+compareDialog.addEventListener("click", (event) => {
+  if (event.target === compareDialog) compareDialog.close();
+});
 function basenameNoExt(name: string) {
   const slash = name.lastIndexOf("/");
   const base = slash === -1 ? name : name.slice(slash + 1);
