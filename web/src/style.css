@@ -625,13 +625,29 @@ body:has(#image-review[open]), body:has(#compare-dialog[open]) { overflow: hidde
   gap: 16px;
   margin-top: 16px;
 }
-.compare-pane img {
-  display: block;
-  width: 100%;
-  max-height: 70vh;
+.compare-pane {
+  /* Without this, a grid item's intrinsic min-width is its content size - a
+     zoomed (explicitly wide) image would then blow out the grid column
+     instead of triggering the viewport's own scrollbars. */
+  min-width: 0;
+}
+.compare-viewport {
+  height: min(60dvh, 650px);
+  min-height: 200px;
+  overflow: auto;
+  padding: 8px;
   background: var(--green-ink);
   border-radius: 8px;
-  object-fit: contain;
+}
+.compare-pane img {
+  display: block;
+  margin: 0 auto;
+  max-width: none;
+}
+.reference-step {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
 }
 @media (max-width: 680px) {
   .compare-grid {

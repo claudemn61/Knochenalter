@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { nearestReferenceRow, parseReferenceCsv } from "../src/rsna-reference";
+import {
+  nearestReferenceRow,
+  parseReferenceCsv,
+  stepReferenceRow,
+} from "../src/rsna-reference";
 
 describe("parseReferenceCsv", () => {
   it("parses the RSNA training-CSV column names (id, boneage, male)", () => {
@@ -60,5 +64,46 @@ describe("nearestReferenceRow", () => {
       sex: "female",
     });
     expect(nearestReferenceRow([rows[0]], 50, "female")).toBeUndefined();
+  });
+});
+
+describe("stepReferenceRow", () => {
+  const rows = [
+    { id: "a", months: 72, sex: "male" as const },
+    { id: "b", months: 84, sex: "male" as const },
+    { id: "c", months: 96, sex: "male" as const },
+    { id: "d", months: 90, sex: "male" as const }, // no local image file
+    { id: "e", months: 60, sex: "female" as const },
+  ];
+  const available = (id: string) => id !== "d";
+
+  it("steps to the next-older available row", () => {
+    expect(stepReferenceRow(rows, "male", 84, 1, available)).toEqual({
+      id: "c",
+      months: 96,
+      sex: "male",
+    });
+  });
+
+  it("steps to the next-younger available row", () => {
+    expect(stepReferenceRow(rows, "male", 84, -1, available)).toEqual({
+      id: "a",
+      months: 72,
+      sex: "male",
+    });
+  });
+
+  it("skips rows whose image isn't locally available", () => {
+    // 90 (row d) is closer to 84 than 96, but has no local image.
+    expect(stepReferenceRow(rows, "male", 84, 1, available)?.id).not.toBe("d");
+  });
+
+  it("never returns a row of the other sex", () => {
+    expect(stepReferenceRow(rows, "male", 70, -1, available)).toBeUndefined();
+  });
+
+  it("returns undefined past either end of the range", () => {
+    expect(stepReferenceRow(rows, "male", 96, 1, available)).toBeUndefined();
+    expect(stepReferenceRow(rows, "male", 72, -1, available)).toBeUndefined();
   });
 });

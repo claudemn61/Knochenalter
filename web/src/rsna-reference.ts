@@ -78,3 +78,26 @@ export function nearestReferenceRow(
   }
   return best;
 }
+
+/**
+ * The next-younger (direction -1) or next-older (direction 1) row relative
+ * to `fromMonths`, restricted to `sex` and to rows `available` (i.e. whose
+ * image file is actually loaded locally) - lets a user step through the
+ * reference dataset by age even after picking a specific comparison image.
+ */
+export function stepReferenceRow(
+  rows: ReferenceRow[],
+  sex: "male" | "female",
+  fromMonths: number,
+  direction: -1 | 1,
+  available: (id: string) => boolean,
+): ReferenceRow | undefined {
+  let best: ReferenceRow | undefined;
+  for (const row of rows) {
+    if (row.sex !== sex || !available(row.id)) continue;
+    if (direction < 0 ? row.months >= fromMonths : row.months <= fromMonths) continue;
+    if (!best || (direction < 0 ? row.months > best.months : row.months < best.months))
+      best = row;
+  }
+  return best;
+}

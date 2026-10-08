@@ -18,6 +18,7 @@ import { nearestStandardAge } from "./greulich-pyle-standard-ages";
 import {
   nearestReferenceRow,
   parseReferenceCsv,
+  stepReferenceRow,
   type ReferenceRow,
 } from "./rsna-reference";
 import { t, type Key } from "./i18n";
@@ -42,11 +43,23 @@ const referenceStatus = el("reference-status");
 const referenceContent = el("reference-content");
 const referenceImage = el<HTMLImageElement>("reference-image");
 const referenceCaption = el("reference-caption");
+const referenceYoungerButtons = [
+  el<HTMLButtonElement>("reference-younger"),
+  el<HTMLButtonElement>("compare-younger"),
+];
+const referenceOlderButtons = [
+  el<HTMLButtonElement>("reference-older"),
+  el<HTMLButtonElement>("compare-older"),
+];
 const compareDialog = el<HTMLDialogElement>("compare-dialog");
+const comparePatientViewport = el("compare-patient-viewport");
+const compareReferenceViewport = el("compare-reference-viewport");
 const comparePatientImage = el<HTMLImageElement>("compare-patient-image");
 const compareReferenceImage = el<HTMLImageElement>("compare-reference-image");
 const comparePatientCaption = el("compare-patient-caption");
 const compareReferenceCaption = el("compare-reference-caption");
+const compareZoom = el<HTMLInputElement>("compare-zoom");
+const compareZoomValue = el("compare-zoom-value");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
 const source = document.createElement("canvas");
@@ -82,6 +95,9 @@ let modelMonths: number | undefined;
 let referenceRows: ReferenceRow[] = [];
 let referenceImages: Map<string, File> | undefined;
 let referenceObjectUrl: string | undefined;
+// The row currently shown (starts at the nearest match, but can be stepped
+// away from it via the younger/older buttons below).
+let displayedReferenceRow: ReferenceRow | undefined;
 let busy = false,
   fileGeneration = 0;
 let dragging: { x: number; y: number } | undefined;
@@ -136,6 +152,57 @@ function updateReferenceStatus() {
         })
       : t("reference.notLoaded");
 }
+function referenceAvailable(id: string) {
+  return !!referenceImages?.has(id);
+}
+function updateReferenceStepButtons() {
+  const hasYounger =
+    !!result &&
+    !!displayedReferenceRow &&
+    !!stepReferenceRow(referenceRows, result.sex, displayedReferenceRow.months, -1, referenceAvailable);
+  const hasOlder =
+    !!result &&
+    !!displayedReferenceRow &&
+    !!stepReferenceRow(referenceRows, result.sex, displayedReferenceRow.months, 1, referenceAvailable);
+  for (const button of referenceYoungerButtons) button.disabled = !hasYounger;
+  for (const button of referenceOlderButtons) button.disabled = !hasOlder;
+}
+function showReferenceRow(row: ReferenceRow) {
+  const file = referenceImages?.get(row.id);
+  if (!file) return;
+  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+  referenceObjectUrl = URL.createObjectURL(file);
+  referenceImage.src = referenceObjectUrl;
+  displayedReferenceRow = row;
+  const diff = editedMonths === undefined ? 0 : Math.round(row.months - editedMonths);
+  referenceCaption.textContent = t("reference.caption", {
+    age: ageText(row.months),
+    sex: t(row.sex === "male" ? "sex.male" : "sex.female"),
+    id: row.id,
+    diff: `${diff >= 0 ? "+" : ""}${diff}`,
+  });
+  referenceContent.hidden = false;
+  updateReferenceStepButtons();
+  if (compareDialog.open) {
+    compareReferenceImage.src = referenceObjectUrl;
+    compareReferenceCaption.textContent = referenceCaption.textContent;
+  }
+}
+function stepReference(direction: -1 | 1) {
+  if (!result || !displayedReferenceRow) return;
+  const next = stepReferenceRow(
+    referenceRows,
+    result.sex,
+    displayedReferenceRow.months,
+    direction,
+    referenceAvailable,
+  );
+  if (next) showReferenceRow(next);
+}
+for (const button of referenceYoungerButtons)
+  button.addEventListener("click", () => stepReference(-1));
+for (const button of referenceOlderButtons)
+  button.addEventListener("click", () => stepReference(1));
 function updateReferenceImage() {
   updateReferenceStatus();
   if (
@@ -145,6 +212,8 @@ function updateReferenceImage() {
     !referenceImages?.size
   ) {
     referenceContent.hidden = true;
+    displayedReferenceRow = undefined;
+    updateReferenceStepButtons();
     return;
   }
   const row = nearestReferenceRow(referenceRows, editedMonths, result.sex);
@@ -152,27 +221,76 @@ function updateReferenceImage() {
   if (!row || !file) {
     referenceContent.hidden = true;
     referenceStatus.textContent = t("reference.noMatch");
+    displayedReferenceRow = undefined;
+    updateReferenceStepButtons();
     return;
   }
-  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
-  referenceObjectUrl = URL.createObjectURL(file);
-  referenceImage.src = referenceObjectUrl;
-  const diff = Math.round(row.months - editedMonths);
-  referenceCaption.textContent = t("reference.caption", {
-    age: ageText(row.months),
-    sex: t(row.sex === "male" ? "sex.male" : "sex.female"),
-    id: row.id,
-    diff: `${diff >= 0 ? "+" : ""}${diff}`,
-  });
-  referenceContent.hidden = false;
+  showReferenceRow(row);
 }
+// Zoom/pan state for the compare dialog: a shared zoom level applied to both
+// images relative to each one's own best-fit size, with scroll position
+// mirrored between the two viewports (as a fraction of the scrollable
+// range) so the same relative image region stays in view on both sides.
+function fitAndSize(viewport: HTMLElement, img: HTMLImageElement, zoomValue: number) {
+  if (!img.naturalWidth || !img.naturalHeight) return;
+  const fit = Math.min(
+    (viewport.clientWidth - 16) / img.naturalWidth,
+    (viewport.clientHeight - 16) / img.naturalHeight,
+  );
+  const factor = Math.max(fit, 0.01) * zoomValue;
+  img.style.width = `${Math.max(1, img.naturalWidth * factor)}px`;
+  img.style.height = `${Math.max(1, img.naturalHeight * factor)}px`;
+}
+function resizeCompare() {
+  if (!compareDialog.open) return;
+  const zoomValue = Number(compareZoom.value);
+  fitAndSize(comparePatientViewport, comparePatientImage, zoomValue);
+  fitAndSize(compareReferenceViewport, compareReferenceImage, zoomValue);
+  compareZoomValue.textContent = `${Math.round(zoomValue * 100)}%`;
+}
+comparePatientImage.addEventListener("load", resizeCompare);
+compareReferenceImage.addEventListener("load", resizeCompare);
+compareZoom.addEventListener("input", resizeCompare);
+window.addEventListener("resize", resizeCompare);
+el("compare-zoom-reset").addEventListener("click", () => {
+  compareZoom.value = "1";
+  resizeCompare();
+  comparePatientViewport.scrollTo(0, 0);
+  compareReferenceViewport.scrollTo(0, 0);
+});
+let syncingScroll = false;
+function syncScroll(from: HTMLElement, to: HTMLElement) {
+  if (syncingScroll) return;
+  syncingScroll = true;
+  const fx = from.scrollWidth > from.clientWidth
+    ? from.scrollLeft / (from.scrollWidth - from.clientWidth)
+    : 0;
+  const fy = from.scrollHeight > from.clientHeight
+    ? from.scrollTop / (from.scrollHeight - from.clientHeight)
+    : 0;
+  to.scrollLeft = fx * (to.scrollWidth - to.clientWidth);
+  to.scrollTop = fy * (to.scrollHeight - to.clientHeight);
+  setTimeout(() => {
+    syncingScroll = false;
+  }, 0);
+}
+comparePatientViewport.addEventListener("scroll", () =>
+  syncScroll(comparePatientViewport, compareReferenceViewport),
+);
+compareReferenceViewport.addEventListener("scroll", () =>
+  syncScroll(compareReferenceViewport, comparePatientViewport),
+);
 function openCompareDialog() {
   if (!image || !referenceObjectUrl) return;
+  compareZoom.value = "1";
   comparePatientImage.src = source.toDataURL("image/png");
   comparePatientCaption.textContent = `${filename} · ${image.width} × ${image.height}`;
   compareReferenceImage.src = referenceObjectUrl;
   compareReferenceCaption.textContent = referenceCaption.textContent || "";
   compareDialog.showModal();
+  comparePatientViewport.scrollTo(0, 0);
+  compareReferenceViewport.scrollTo(0, 0);
+  resizeCompare();
 }
 referenceImage.addEventListener("dblclick", openCompareDialog);
 canvas.addEventListener("dblclick", openCompareDialog);

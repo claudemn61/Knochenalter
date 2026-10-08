@@ -103,10 +103,16 @@ const de = {
   "reference.caption": "{age}, {sex} · ID {id} · Δ {diff} Monate zur Schätzung",
   "reference.disclaimer":
     "Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.",
+  "reference.younger": "← Jünger",
+  "reference.older": "Älter →",
 
   "compare.title": "Vergleich",
   "compare.close": "Schliessen",
   "compare.zoomHint": "Doppelklick: beide Bilder gross nebeneinander",
+  "compare.zoom": "Zoom",
+  "compare.zoomReset": "An Bildschirm anpassen",
+  "compare.zoomSync": "Zoom und Bildausschnitt gelten für beide Bilder gleichermassen.",
+  "compare.pan": "Vergrössertes Bild. Zum Erkunden scrollen.",
 
   "befund.heading": "Befund",
   "befund.boneAgeLabel": "Biologisches Knochenalter:",

@@ -327,6 +327,10 @@
               title="Doppelklick: beide Bilder gross nebeneinander"
             />
             <p id="reference-caption" class="result-note"></p>
+            <div class="reference-step">
+              <button type="button" id="reference-younger" class="text-button" data-i18n="reference.younger">← Jünger</button>
+              <button type="button" id="reference-older" class="text-button" data-i18n="reference.older">Älter →</button>
+            </div>
             <p class="result-note" data-i18n="compare.zoomHint">Doppelklick: beide Bilder gross nebeneinander</p>
           </div>
           <p class="result-note" data-i18n="reference.disclaimer">
@@ -380,14 +384,23 @@
           <h2 id="compare-title" data-i18n="compare.title">Vergleich</h2>
           <button type="button" id="compare-close" class="secondary-button" data-i18n="compare.close" autofocus>Schliessen</button>
         </div>
+        <div class="review-controls">
+          <label class="review-zoom-label" for="compare-zoom"><span data-i18n="compare.zoom">Zoom</span><input id="compare-zoom" type="range" min="1" max="4" step="0.25" value="1" /><output id="compare-zoom-value" for="compare-zoom">100%</output></label>
+          <button type="button" id="compare-zoom-reset" class="text-button" data-i18n="compare.zoomReset">An Bildschirm anpassen</button>
+        </div>
+        <p class="review-footnote" data-i18n="compare.zoomSync">Zoom und Bildausschnitt gelten für beide Bilder gleichermassen.</p>
         <div class="compare-grid">
           <div class="compare-pane">
-            <img id="compare-patient-image" alt="" />
+            <div id="compare-patient-viewport" class="compare-viewport" tabindex="0" data-i18n-aria-label="compare.pan" aria-label="Vergrössertes Bild. Zum Erkunden scrollen."><img id="compare-patient-image" alt="" /></div>
             <p id="compare-patient-caption" class="result-note"></p>
           </div>
           <div class="compare-pane">
-            <img id="compare-reference-image" alt="" />
+            <div id="compare-reference-viewport" class="compare-viewport" tabindex="0" data-i18n-aria-label="compare.pan" aria-label="Vergrössertes Bild. Zum Erkunden scrollen."><img id="compare-reference-image" alt="" /></div>
             <p id="compare-reference-caption" class="result-note"></p>
+            <div class="reference-step">
+              <button type="button" id="compare-younger" class="text-button" data-i18n="reference.younger">← Jünger</button>
+              <button type="button" id="compare-older" class="text-button" data-i18n="reference.older">Älter →</button>
+            </div>
           </div>
         </div>
       </dialog>
