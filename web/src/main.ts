@@ -15,6 +15,11 @@ import {
 } from "./report-view";
 import { createImageReview } from "./image-review";
 import { nearestStandardAge } from "./greulich-pyle-standard-ages";
+import {
+  nearestReferenceRow,
+  parseReferenceCsv,
+  type ReferenceRow,
+} from "./rsna-reference";
 import { t, type Key } from "./i18n";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -29,6 +34,14 @@ const heightMotherCm = el<HTMLInputElement>("height-mother-cm");
 const boneAgeYears = el<HTMLInputElement>("bone-age-years");
 const boneAgeMonths = el<HTMLInputElement>("bone-age-months");
 const boneAgeHint = el("bone-age-hint");
+const referencePickCsv = el<HTMLButtonElement>("reference-pick-csv");
+const referencePickImages = el<HTMLButtonElement>("reference-pick-images");
+const referenceCsvInput = el<HTMLInputElement>("reference-csv-input");
+const referenceImagesInput = el<HTMLInputElement>("reference-images-input");
+const referenceStatus = el("reference-status");
+const referenceContent = el("reference-content");
+const referenceImage = el<HTMLImageElement>("reference-image");
+const referenceCaption = el("reference-caption");
 const canvas = el<HTMLCanvasElement>("image-canvas");
 const ctx = canvas.getContext("2d")!;
 const source = document.createElement("canvas");
@@ -57,6 +70,13 @@ let editedMonths: number | undefined;
 // The model's raw, unsnapped estimate in months, kept only to show in the
 // "manually adjusted" hint - never used for the Befund/height calculations.
 let modelMonths: number | undefined;
+// Locally loaded RSNA reference data (CSV rows + matching image files), for
+// showing a comparison image next to the computed bone age. Loaded fresh
+// each session via the file pickers below - never bundled with the app, as
+// the dataset is for non-commercial/educational use only.
+let referenceRows: ReferenceRow[] = [];
+let referenceImages: Map<string, File> | undefined;
+let referenceObjectUrl: string | undefined;
 let busy = false,
   fileGeneration = 0;
 let dragging: { x: number; y: number } | undefined;
@@ -98,9 +118,79 @@ function onBoneAgeEdit() {
     boneAgeHint.hidden = false;
   }
   renderReport(reportInput(result));
+  updateReferenceImage();
 }
 boneAgeYears.addEventListener("change", onBoneAgeEdit);
 boneAgeMonths.addEventListener("change", onBoneAgeEdit);
+function updateReferenceStatus() {
+  referenceStatus.textContent =
+    referenceRows.length || referenceImages?.size
+      ? t("reference.loaded", {
+          rows: String(referenceRows.length),
+          images: String(referenceImages?.size ?? 0),
+        })
+      : t("reference.notLoaded");
+}
+function updateReferenceImage() {
+  updateReferenceStatus();
+  if (
+    !result ||
+    editedMonths === undefined ||
+    !referenceRows.length ||
+    !referenceImages?.size
+  ) {
+    referenceContent.hidden = true;
+    return;
+  }
+  const row = nearestReferenceRow(referenceRows, editedMonths, result.sex);
+  const file = row && referenceImages.get(row.id);
+  if (!row || !file) {
+    referenceContent.hidden = true;
+    referenceStatus.textContent = t("reference.noMatch");
+    return;
+  }
+  if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+  referenceObjectUrl = URL.createObjectURL(file);
+  referenceImage.src = referenceObjectUrl;
+  const diff = Math.round(row.months - editedMonths);
+  referenceCaption.textContent = t("reference.caption", {
+    age: ageText(row.months),
+    sex: t(row.sex === "male" ? "sex.male" : "sex.female"),
+    id: row.id,
+    diff: `${diff >= 0 ? "+" : ""}${diff}`,
+  });
+  referenceContent.hidden = false;
+}
+function basenameNoExt(name: string) {
+  const slash = name.lastIndexOf("/");
+  const base = slash === -1 ? name : name.slice(slash + 1);
+  const dot = base.lastIndexOf(".");
+  return dot === -1 ? base : base.slice(0, dot);
+}
+referencePickCsv.addEventListener("click", () => referenceCsvInput.click());
+referencePickImages.addEventListener("click", () => referenceImagesInput.click());
+referenceCsvInput.addEventListener("change", async () => {
+  const file = referenceCsvInput.files?.[0];
+  if (!file) return;
+  try {
+    referenceRows = parseReferenceCsv(await file.text());
+  } catch (cause) {
+    referenceRows = [];
+    referenceStatus.textContent = t("reference.loadFailed", {
+      reason: cause instanceof Error ? cause.message : String(cause),
+    });
+    return;
+  }
+  updateReferenceImage();
+});
+referenceImagesInput.addEventListener("change", () => {
+  referenceImages = new Map();
+  for (const file of referenceImagesInput.files ?? []) {
+    if (!/\.(png|jpe?g|bmp|gif|webp)$/i.test(file.name)) continue;
+    referenceImages.set(basenameNoExt(file.name), file);
+  }
+  updateReferenceImage();
+});
 function error(message: string) {
   el("error").textContent = message;
   el("error").hidden = false;
@@ -123,6 +213,7 @@ function invalidateResult() {
   boneAgeHint.hidden = true;
   el("result-folds").textContent = "";
   el("result").hidden = true;
+  referenceContent.hidden = true;
 }
 function refresh() {
   let validDates = true;
@@ -442,6 +533,7 @@ function run(mode: "prepare" | "infer") {
           .join(", "),
       });
       boneAgeHint.hidden = true;
+      updateReferenceImage();
       finishWorker();
       showResult(result!, true);
       status("model.executed");

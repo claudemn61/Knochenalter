@@ -92,6 +92,18 @@ const de = {
   "result.notComputed": "nicht berechnet",
   "result.monthsValue": "{months} Monate",
 
+  "reference.heading": "Referenzbild (RSNA Pediatric Bone Age)",
+  "reference.pickCsv": "Referenz-CSV wählen",
+  "reference.pickImages": "Referenzbilder-Ordner wählen",
+  "reference.notLoaded":
+    "Noch keine Referenzdaten geladen. CSV und Bilder-Ordner aus dem lokal heruntergeladenen RSNA-Datensatz auswählen, um automatisch ein passendes Vergleichsbild zu sehen.",
+  "reference.loaded": "{rows} Referenzeinträge, {images} Bilder lokal geladen.",
+  "reference.loadFailed": "Referenz-CSV konnte nicht gelesen werden: {reason}",
+  "reference.noMatch": "Kein passendes Bild im gewählten Datensatz gefunden.",
+  "reference.caption": "{age}, {sex} · ID {id} · Δ {diff} Monate zur Schätzung",
+  "reference.disclaimer":
+    "Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.",
+
   "befund.heading": "Befund",
   "befund.boneAgeLabel": "Biologisches Knochenalter:",
   "befund.chronoLabel": "Chronologisches Alter:",

@@ -305,6 +305,27 @@
             </div>
           </div>
         </div>
+        <section id="reference-section" class="report-section befund-section" aria-labelledby="reference-title">
+          <div class="befund-heading">
+            <h3 id="reference-title" data-i18n="reference.heading">Referenzbild (RSNA Pediatric Bone Age)</h3>
+            <div class="reference-pickers">
+              <button id="reference-pick-csv" type="button" class="secondary-button" data-i18n="reference.pickCsv">Referenz-CSV wählen</button>
+              <button id="reference-pick-images" type="button" class="secondary-button" data-i18n="reference.pickImages">Referenzbilder-Ordner wählen</button>
+            </div>
+          </div>
+          <input id="reference-csv-input" type="file" accept=".csv" class="visually-hidden" />
+          <input id="reference-images-input" type="file" webkitdirectory directory multiple class="visually-hidden" />
+          <p id="reference-status" class="result-note" data-i18n="reference.notLoaded">
+            Noch keine Referenzdaten geladen. CSV und Bilder-Ordner aus dem lokal heruntergeladenen RSNA-Datensatz auswählen, um automatisch ein passendes Vergleichsbild zu sehen.
+          </p>
+          <div id="reference-content" hidden>
+            <img id="reference-image" class="reference-image" alt="" />
+            <p id="reference-caption" class="result-note"></p>
+          </div>
+          <p class="result-note" data-i18n="reference.disclaimer">
+            Nur lokal geladen, nicht Teil der App. RSNA Pediatric Bone Age Dataset — nicht-kommerzielle/edukative Nutzung, Ground Truth nach Greulich-Pyle.
+          </p>
+        </section>
         <section id="befund-section" class="report-section befund-section" aria-labelledby="befund-title" hidden>
           <div class="befund-heading">
             <h3 id="befund-title" data-i18n="befund.heading">Befund</h3>
